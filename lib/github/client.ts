@@ -139,6 +139,8 @@ export type GithubRepoResponse = {
   default_branch: string;
   fork: boolean;
   owner: { login: string };
+  open_issues_count: number;
+  pushed_at: string | null;
 };
 
 export type GithubTreeNode = {
@@ -245,5 +247,68 @@ export async function fetchOrgVerification(login: string): Promise<boolean> {
     return org.is_verified === true;
   } catch {
     return false;
+  }
+}
+
+/* ========================= Phase 3.2 Additions ========================= */
+
+export type GithubIssue = {
+  number: number;
+  title: string;
+  user: { login: string } | null;
+  comments: number;
+  created_at: string;
+  updated_at: string;
+  html_url: string;
+  pull_request?: any;
+  draft?: boolean;
+};
+
+export async function fetchIssuesAndPrs(owner: string, repo: string): Promise<GithubIssue[] | null> {
+  try {
+    return await gh<GithubIssue[]>(`/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues?state=open&sort=updated&direction=desc&per_page=100`);
+  } catch {
+    return null;
+  }
+}
+
+export type GithubContributor = {
+  login: string;
+};
+
+export async function fetchContributors(owner: string, repo: string): Promise<GithubContributor[] | null> {
+  try {
+    return await gh<GithubContributor[]>(`/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contributors?per_page=10`);
+  } catch {
+    return null;
+  }
+}
+
+export type GithubParticipationStats = {
+  all: number[];
+  owner: number[];
+};
+
+export async function fetchParticipationStats(owner: string, repo: string): Promise<GithubParticipationStats | null> {
+  try {
+    return await gh<GithubParticipationStats>(`/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/stats/participation`);
+  } catch {
+    return null;
+  }
+}
+
+export type GithubCommitResponse = {
+  commit: {
+    author: {
+      date: string;
+    };
+  };
+};
+
+export async function fetchCommit(owner: string, repo: string, ref: string): Promise<GithubCommitResponse | null> {
+  try {
+    return await gh<GithubCommitResponse>(`/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/commits/${encodeURIComponent(ref)}`);
+  } catch {
+    return null;
   }
 }

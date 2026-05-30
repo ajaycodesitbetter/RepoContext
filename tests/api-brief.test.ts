@@ -27,11 +27,25 @@ before(() => {
       return new Response("[]", { status: 200, headers: { "content-type": "application/json" } });
     }
     if (url.includes("/repos/")) {
+      if (url.includes("/issues")) {
+        return new Response("[]", { status: 200, headers: { "content-type": "application/json" } });
+      }
+      if (url.includes("/contributors")) {
+        return new Response("[]", { status: 200, headers: { "content-type": "application/json" } });
+      }
+      if (url.includes("/stats/participation")) {
+        return new Response(JSON.stringify({ all: [], owner: [] }), { status: 200, headers: { "content-type": "application/json" } });
+      }
+      if (url.includes("/commits/")) {
+        return new Response(JSON.stringify({ commit: { author: { date: "2026-05-25T10:00:00Z" } } }), { status: 200, headers: { "content-type": "application/json" } });
+      }
       return new Response(JSON.stringify({
         name: "react",
         full_name: "facebook/react",
         default_branch: "main",
         owner: { login: "facebook" },
+        open_issues_count: 0,
+        pushed_at: "2026-05-25T10:00:00Z"
       }), { status: 200, headers: { "content-type": "application/json" } });
     }
     return new Response("{}", { status: 200, headers: { "content-type": "application/json" } });

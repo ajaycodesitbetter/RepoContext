@@ -78,8 +78,22 @@ before(() => {
         headers: { "content-type": "application/json" },
       });
     }
+    // Issues, PRs, etc (Phase 3.2 Additions)
+    if (url.includes("/issues")) {
+      return new Response("[]", { status: 200, headers: { "content-type": "application/json" } });
+    }
+    if (url.includes("/contributors")) {
+      return new Response("[]", { status: 200, headers: { "content-type": "application/json" } });
+    }
+    if (url.includes("/stats/participation")) {
+      return new Response(JSON.stringify({ all: [], owner: [] }), { status: 200, headers: { "content-type": "application/json" } });
+    }
+    if (url.includes("/commits/")) {
+      return new Response(JSON.stringify({ commit: { author: { date: "2026-05-25T10:00:00Z" } } }), { status: 200, headers: { "content-type": "application/json" } });
+    }
+
     if (url.includes("/repos/")) {
-      return new Response(JSON.stringify(stubRepoBody()), {
+      return new Response(JSON.stringify({ ...stubRepoBody(), open_issues_count: 0, pushed_at: "2026-05-25T10:00:00Z" }), {
         status: 200,
         headers: { "content-type": "application/json" },
       });
@@ -142,7 +156,12 @@ test("service maps absent truncated field → treeTruncated=false", async () => 
     if (url.includes("/orgs/")) {
       return new Response(JSON.stringify({ login: "facebook", is_verified: false }), { status: 200 });
     }
-    return new Response(JSON.stringify(stubRepoBody()), { status: 200 });
+    if (url.includes("/issues")) return new Response("[]", { status: 200 });
+    if (url.includes("/contributors")) return new Response("[]", { status: 200 });
+    if (url.includes("/stats/participation")) return new Response(JSON.stringify({ all: [], owner: [] }), { status: 200 });
+    if (url.includes("/commits/")) return new Response(JSON.stringify({ commit: { author: { date: "2026-05-25T10:00:00Z" } } }), { status: 200 });
+
+    return new Response(JSON.stringify({ ...stubRepoBody(), open_issues_count: 0, pushed_at: "2026-05-25T10:00:00Z" }), { status: 200 });
   }) as typeof fetch;
   try {
     const { getBriefForUrl } = await import("../lib/github/service");
@@ -262,7 +281,12 @@ test("service populates projectType + onboarding from the tree", async () => {
     if (url.includes("/orgs/")) {
       return new Response(JSON.stringify({ login: "facebook", is_verified: false }), { status: 200 });
     }
-    return new Response(JSON.stringify(stubRepoBody()), { status: 200 });
+    if (url.includes("/issues")) return new Response("[]", { status: 200 });
+    if (url.includes("/contributors")) return new Response("[]", { status: 200 });
+    if (url.includes("/stats/participation")) return new Response(JSON.stringify({ all: [], owner: [] }), { status: 200 });
+    if (url.includes("/commits/")) return new Response(JSON.stringify({ commit: { author: { date: "2026-05-25T10:00:00Z" } } }), { status: 200 });
+
+    return new Response(JSON.stringify({ ...stubRepoBody(), open_issues_count: 0, pushed_at: "2026-05-25T10:00:00Z" }), { status: 200 });
   }) as typeof fetch;
   try {
     const { getBriefForUrl } = await import("../lib/github/service");
@@ -315,7 +339,12 @@ test("service degrades to projectType=null + minimal onboarding for unknown stac
     if (url.includes("/orgs/")) {
       return new Response(JSON.stringify({ login: "facebook", is_verified: false }), { status: 200 });
     }
-    return new Response(JSON.stringify(stubRepoBody()), { status: 200 });
+    if (url.includes("/issues")) return new Response("[]", { status: 200 });
+    if (url.includes("/contributors")) return new Response("[]", { status: 200 });
+    if (url.includes("/stats/participation")) return new Response(JSON.stringify({ all: [], owner: [] }), { status: 200 });
+    if (url.includes("/commits/")) return new Response(JSON.stringify({ commit: { author: { date: "2026-05-25T10:00:00Z" } } }), { status: 200 });
+
+    return new Response(JSON.stringify({ ...stubRepoBody(), open_issues_count: 0, pushed_at: "2026-05-25T10:00:00Z" }), { status: 200 });
   }) as typeof fetch;
   try {
     const { getBriefForUrl } = await import("../lib/github/service");

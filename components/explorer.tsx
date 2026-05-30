@@ -26,6 +26,7 @@ import { InstallPanel } from "@/components/install-panel";
 import { RateLimitIndicator } from "@/components/rate-limit-indicator";
 import { BackgroundGlobe } from "@/components/background-globe";
 import { RecentSearches, useRecentSearches } from "@/components/recent-searches";
+import { RepositoryHealthPanel } from "@/components/repository-health";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { BriefResponse, ApiError } from "@/lib/types";
@@ -543,6 +544,11 @@ function SuccessMain({ data }: { data: BriefResponse }) {
             repo={data.meta.repo}
           />
         )}
+        <RepositoryHealthPanel
+          health={data.health}
+          openIssues={data.openIssues}
+          openPullRequests={data.openPullRequests}
+        />
         <Tabs defaultValue="top">
           <TabsList className="grid h-9 max-w-xs grid-cols-2">
             <TabsTrigger value="top" className="gap-1.5 text-xs">

@@ -127,5 +127,47 @@ export function buildMockResponse(
     onboarding,
     treeTruncated: false,
     release: MOCK_RELEASE,
+    health: {
+      lastPushAt: "2026-05-29T10:00:00Z",
+      defaultBranchLastCommitAt: "2026-05-29T09:58:12Z",
+      openIssuesCount: 42,
+      openPullRequestsCount: 5,
+      contributorCount: 15,
+      recentCommitCount4w: 32,
+      activityStatus: "active",
+      reviewPressure: "moderate",
+      communityBreadth: "broad",
+    },
+    openIssues: [
+      {
+        number: 101,
+        title: "Mock issue 1",
+        author: "mockuser",
+        comments: 12,
+        createdAt: "2026-05-20T10:00:00Z",
+        updatedAt: "2026-05-28T10:00:00Z",
+        url: "#",
+      },
+      {
+        number: 102,
+        title: "Mock issue 2",
+        author: "mockuser2",
+        comments: 2,
+        createdAt: "2026-05-25T10:00:00Z",
+        updatedAt: "2026-05-26T10:00:00Z",
+        url: "#",
+      },
+    ],
+    openPullRequests: [
+      {
+        number: 103,
+        title: "Mock PR 1",
+        author: "mockuser3",
+        comments: 5,
+        createdAt: "2026-05-28T10:00:00Z",
+        updatedAt: "2026-05-29T10:00:00Z",
+        url: "#",
+      },
+    ],
   };
 }

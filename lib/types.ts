@@ -120,6 +120,38 @@ export type BriefResponse = {
   prerelease?: ReleaseInfo | null;
   /** Rate limit info from the last GitHub API response — used for the UI indicator. */
   rateLimit?: { remaining: number; limit: number } | null;
+
+  // --- Phase 3.2 Additions ---
+  health?: RepoHealth;
+  openIssues?: RepoWorkItem[];
+  openPullRequests?: RepoWorkItem[];
+};
+
+export type HealthStatus = "active" | "slowing" | "stale";
+export type ReviewPressure = "low" | "moderate" | "high";
+export type CommunityBreadth = "solo" | "small-team" | "broad";
+
+export type RepoHealth = {
+  lastPushAt: string | null;
+  defaultBranchLastCommitAt: string | null;
+  openIssuesCount: number | null;
+  openPullRequestsCount: number | null;
+  contributorCount: number | null;
+  recentCommitCount4w: number | null;
+  activityStatus: HealthStatus | null;
+  reviewPressure: ReviewPressure | null;
+  communityBreadth: CommunityBreadth | null;
+};
+
+export type RepoWorkItem = {
+  number: number;
+  title: string;
+  author: string | null;
+  comments: number;
+  createdAt: string;
+  updatedAt: string;
+  url: string;
+  isDraft?: boolean;
 };
 
 export type ApiError = {
