@@ -25,6 +25,7 @@ import { OnboardingBriefCard } from "@/components/onboarding-brief";
 import { InstallPanel } from "@/components/install-panel";
 import { RateLimitIndicator } from "@/components/rate-limit-indicator";
 import { BackgroundGlobe } from "@/components/background-globe";
+import { RecentSearches, useRecentSearches } from "@/components/recent-searches";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { BriefResponse, ApiError } from "@/lib/types";
@@ -45,6 +46,7 @@ type FetchState =
 export function Explorer() {
   const [input, setInput] = React.useState("");
   const [state, setState] = React.useState<FetchState>({ kind: "idle" });
+  const { recents, addRecent, removeRecent } = useRecentSearches();
 
   const runQuery = React.useCallback(async (query: string) => {
     const trimmed = query.trim();
@@ -60,6 +62,7 @@ export function Explorer() {
         setState({ kind: "error", query: trimmed, message });
         return;
       }
+      addRecent(trimmed);
       setState({ kind: "success", query: trimmed, data: json as BriefResponse });
     } catch {
       setState({
@@ -146,6 +149,8 @@ export function Explorer() {
             setInput={setInput}
             onSubmit={() => runQuery(input)}
             onExample={handleExample}
+            recents={recents}
+            onRemoveRecent={removeRecent}
           />
         ) : (
           <div className="grid gap-5 lg:grid-cols-[320px_1fr]">
@@ -195,11 +200,15 @@ function Hero({
   setInput,
   onSubmit,
   onExample,
+  recents,
+  onRemoveRecent,
 }: {
   input: string;
   setInput: (v: string) => void;
   onSubmit: () => void;
   onExample: (q: string) => void;
+  recents: string[];
+  onRemoveRecent: (q: string) => void;
 }) {
   // Editorial composition. Serif display for the headline, mono for code
   // chips, sans for body. Globe is visible behind — palette tuned accordingly.
@@ -261,6 +270,13 @@ function Hero({
           ))}
         </div>
       </div>
+
+      {/* Recents */}
+      <RecentSearches
+        recents={recents}
+        onSelect={onExample}
+        onRemove={onRemoveRecent}
+      />
     </div>
   );
 }
