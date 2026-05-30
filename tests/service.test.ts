@@ -378,3 +378,80 @@ test("owner profile fetch failure is NON-FATAL — brief still succeeds", async 
   assert.equal(result.data.meta.owner, "facebook");
   assert.ok(result.data.tree.length > 0);
 });
+
+test("service health uses filtered issues and PRs for counts", async () => {
+  const fetchBackup = globalThis.fetch;
+  globalThis.fetch = (async (input: RequestInfo | URL) => {
+    const url = typeof input === "string" ? input : input.toString();
+    if (url.includes("/git/trees/")) return new Response(JSON.stringify(stubTreeBody()), { status: 200 });
+    if (url.includes("/users/")) return new Response(JSON.stringify(stubOwnerProfileBody()), { status: 200 });
+    if (url.includes("/releases")) return new Response(JSON.stringify([]), { status: 200 });
+    if (url.includes("/orgs/")) return new Response(JSON.stringify({ login: "facebook", is_verified: false }), { status: 200 });
+    if (url.includes("/contributors")) return new Response("[]", { status: 200 });
+    if (url.includes("/stats/participation")) return new Response(JSON.stringify({ all: [], owner: [] }), { status: 200 });
+    if (url.includes("/commits/")) return new Response(JSON.stringify({ commit: { author: { date: "2026-05-25T10:00:00Z" } } }), { status: 200 });
+
+    if (url.includes("/issues")) {
+      // Return 2 issues and 3 PRs
+      return new Response(JSON.stringify([
+        { number: 1, pull_request: undefined },
+        { number: 2, pull_request: undefined },
+        { number: 3, pull_request: { url: "..." } },
+        { number: 4, pull_request: { url: "..." } },
+        { number: 5, pull_request: { url: "..." } },
+      ]), { status: 200, headers: { "content-type": "application/json" } });
+    }
+
+    if (url.includes("/repos/")) {
+      return new Response(JSON.stringify({ ...stubRepoBody(), open_issues_count: 99 }), { status: 200 });
+    }
+  }) as typeof fetch;
+
+  try {
+    const { getBriefForUrl } = await import("../lib/github/service");
+    const result = await getBriefForUrl("facebook/react");
+    assert.equal(result.ok, true);
+    if (!result.ok) return;
+
+    assert.equal(result.data.health?.openIssuesCount, 2, "Issues count should come from filtered list");
+    assert.equal(result.data.health?.openPullRequestsCount, 3, "PRs count should come from filtered list");
+    assert.equal(result.data.health?.reviewPressure, "low", "Review pressure should be based on 2+3=5 (low)");
+  } finally {
+    globalThis.fetch = fetchBackup;
+  }
+});
+
+test("service health degrades to fallback repo count if issues fetch fails", async () => {
+  const fetchBackup = globalThis.fetch;
+  globalThis.fetch = (async (input: RequestInfo | URL) => {
+    const url = typeof input === "string" ? input : input.toString();
+    if (url.includes("/git/trees/")) return new Response(JSON.stringify(stubTreeBody()), { status: 200 });
+    if (url.includes("/users/")) return new Response(JSON.stringify(stubOwnerProfileBody()), { status: 200 });
+    if (url.includes("/releases")) return new Response(JSON.stringify([]), { status: 200 });
+    if (url.includes("/orgs/")) return new Response(JSON.stringify({ login: "facebook", is_verified: false }), { status: 200 });
+    if (url.includes("/contributors")) return new Response("[]", { status: 200 });
+    if (url.includes("/stats/participation")) return new Response(JSON.stringify({ all: [], owner: [] }), { status: 200 });
+    if (url.includes("/commits/")) return new Response(JSON.stringify({ commit: { author: { date: "2026-05-25T10:00:00Z" } } }), { status: 200 });
+
+    if (url.includes("/issues")) {
+      return new Response("Not Found", { status: 404 });
+    }
+
+    if (url.includes("/repos/")) {
+      return new Response(JSON.stringify({ ...stubRepoBody(), open_issues_count: 99 }), { status: 200 });
+    }
+  }) as typeof fetch;
+
+  try {
+    const { getBriefForUrl } = await import("../lib/github/service");
+    const result = await getBriefForUrl("facebook/react");
+    assert.equal(result.ok, true);
+    if (!result.ok) return;
+
+    assert.equal(result.data.health?.openIssuesCount, 99, "Issues count should fallback to repo.open_issues_count");
+    assert.equal(result.data.health?.openPullRequestsCount, null, "PR count should be null on fallback");
+    assert.equal(result.data.health?.reviewPressure, "moderate", "Review pressure should be based on 99+0=99 (moderate)");
+  } finally {
+    globalThis.fetch = fetchBackup;
+  }
+});

@@ -140,7 +140,9 @@ export async function getBriefForUrl(input: string): Promise<ServiceResult> {
 
     const lastPushAt = repo.pushed_at ?? null;
     const defaultBranchLastCommitAt = latestCommit?.commit.author.date ?? null;
-    const openIssuesCount = repo.open_issues_count;
+    const fallbackCount = typeof repo.open_issues_count === "number" ? repo.open_issues_count : null;
+    const openIssuesCount = issuesAndPrs ? openIssuesRaw.length : fallbackCount;
+    const openPullRequestsCount = issuesAndPrs ? openPrsRaw.length : null;
     const contributorCount = contributors ? contributors.length : null;
     
     // For stats, we just sum the last 4 weeks of 'all' commits
@@ -151,12 +153,12 @@ export async function getBriefForUrl(input: string): Promise<ServiceResult> {
     const health: RepoHealth = {
       lastPushAt,
       defaultBranchLastCommitAt,
-      openIssuesCount, // Using the combined open_issues_count for both as they fall under the same logic
-      openPullRequestsCount: null, // Since GitHub returns combined in repo.open_issues_count, we pass null here and rely on openIssuesCount for the total pressure
+      openIssuesCount,
+      openPullRequestsCount,
       contributorCount,
       recentCommitCount4w,
       activityStatus: classifyActivityStatus(lastPushAt),
-      reviewPressure: classifyReviewPressure(openIssuesCount, 0),
+      reviewPressure: classifyReviewPressure(openIssuesCount, openPullRequestsCount),
       communityBreadth: classifyCommunityBreadth(contributorCount),
     };
 
