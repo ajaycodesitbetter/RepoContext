@@ -79,7 +79,7 @@ test("token hint shown when GITHUB_TOKEN is not set", () => {
       },
     });
     const msg = buildRateLimitMessage(res);
-    assert.match(msg, /GITHUB_TOKEN/);
+    assert.match(msg, /GitHub token/i);
     assert.match(msg, /5,?000/);
   } finally {
     if (original !== undefined) process.env.GITHUB_TOKEN = original;
@@ -99,7 +99,7 @@ test("token hint NOT shown when GITHUB_TOKEN is set", () => {
       },
     });
     const msg = buildRateLimitMessage(res);
-    assert.doesNotMatch(msg, /GITHUB_TOKEN/);
+    assert.doesNotMatch(msg, /GitHub token/i);
   } finally {
     if (original === undefined) delete process.env.GITHUB_TOKEN;
     else process.env.GITHUB_TOKEN = original;

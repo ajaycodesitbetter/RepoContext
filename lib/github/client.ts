@@ -23,8 +23,8 @@ export class GithubError extends Error {
   }
 }
 
-function authHeaders(): Record<string, string> {
-  const token = process.env.GITHUB_TOKEN;
+function authHeaders(userToken?: string): Record<string, string> {
+  const token = userToken || process.env.GITHUB_TOKEN;
   const headers: Record<string, string> = {
     Accept: "application/vnd.github+json",
     "X-GitHub-Api-Version": "2022-11-28",
@@ -46,9 +46,13 @@ export function getLastRateLimit(): { remaining: number; limit: number } | null 
   return lastRateLimit;
 }
 
-async function gh<T>(path: string): Promise<T> {
+export type GithubRequestOptions = {
+  token?: string | null;
+};
+
+async function gh<T>(path: string, options?: GithubRequestOptions): Promise<T> {
   const res = await fetch(`${GITHUB_API}${path}`, {
-    headers: authHeaders(),
+    headers: authHeaders(options?.token || undefined),
     next: { revalidate: REVALIDATE_SECONDS },
   });
 
@@ -64,11 +68,22 @@ async function gh<T>(path: string): Promise<T> {
   }
 
   if (res.status === 404) {
-    throw new GithubError(404, "Repository not found. Check the owner and repo name, and that the repo is public.");
+    if (options?.token) {
+      throw new GithubError(404, "Repository not found. It may not exist, or your token may lack the required permissions.");
+    }
+    throw new GithubError(404, "Repository not found. It may be private (add a GitHub token to access it), or it may not exist.");
+  }
+  
+  if (res.status === 401) {
+    throw new GithubError(401, "Your GitHub token appears invalid or expired.");
+  }
+
+  if (res.status === 403 && remaining && Number(remaining) > 0) {
+    throw new GithubError(403, "Your token does not have permission to access this repository.");
   }
 
   if (res.status === 403 || res.status === 429) {
-    throw new GithubError(429, buildRateLimitMessage(res));
+    throw new GithubError(429, buildRateLimitMessage(res, !!options?.token));
   }
 
   let detail = `GitHub returned ${res.status}.`;
@@ -88,13 +103,13 @@ async function gh<T>(path: string): Promise<T> {
  *
  * Exported for unit tests; not part of the public module surface.
  */
-export function buildRateLimitMessage(res: Response): string {
+export function buildRateLimitMessage(res: Response, usedUserToken: boolean = false): string {
   const remaining = res.headers.get("x-ratelimit-remaining");
   const resetHeader = res.headers.get("x-ratelimit-reset");
   const retryAfter = res.headers.get("retry-after");
-  const tokenHint = process.env.GITHUB_TOKEN
-    ? ""
-    : " Set GITHUB_TOKEN in Secrets to raise the limit from 60 to 5,000 requests per hour.";
+  const tokenHint = (usedUserToken || process.env.GITHUB_TOKEN)
+    ? " Try again later or use a different token."
+    : " Set a GitHub token to raise the limit from 60 to 5,000 requests per hour.";
 
   // Primary rate limit: budget exhausted, x-ratelimit-reset is a Unix timestamp.
   if (remaining === "0" && resetHeader) {
@@ -138,6 +153,7 @@ export type GithubRepoResponse = {
   language: string | null;
   default_branch: string;
   fork: boolean;
+  private: boolean;
   owner: { login: string };
   open_issues_count: number;
   pushed_at: string | null;
@@ -155,17 +171,19 @@ export type GithubTreeResponse = {
   tree: GithubTreeNode[];
 };
 
-export async function fetchRepo(owner: string, repo: string): Promise<GithubRepoResponse> {
-  return gh<GithubRepoResponse>(`/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`);
+export async function fetchRepo(owner: string, repo: string, options?: GithubRequestOptions): Promise<GithubRepoResponse> {
+  return gh<GithubRepoResponse>(`/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`, options);
 }
 
 export async function fetchTree(
   owner: string,
   repo: string,
   branch: string,
+  options?: GithubRequestOptions
 ): Promise<GithubTreeResponse> {
   return gh<GithubTreeResponse>(
     `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/git/trees/${encodeURIComponent(branch)}?recursive=1`,
+    options
   );
 }
 
@@ -181,8 +199,8 @@ export type GithubOwnerProfile = {
   blog?: string | null;
 };
 
-export async function fetchOwnerProfile(login: string): Promise<GithubOwnerProfile> {
-  return gh<GithubOwnerProfile>(`/users/${encodeURIComponent(login)}`);
+export async function fetchOwnerProfile(login: string, options?: GithubRequestOptions): Promise<GithubOwnerProfile> {
+  return gh<GithubOwnerProfile>(`/users/${encodeURIComponent(login)}`, options);
 }
 
 export function hasGithubToken(): boolean {
@@ -218,10 +236,12 @@ export type GithubRelease = {
 export async function fetchReleases(
   owner: string,
   repo: string,
+  options?: GithubRequestOptions
 ): Promise<GithubRelease[] | null> {
   try {
     return await gh<GithubRelease[]>(
       `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/releases?per_page=10`,
+      options
     );
   } catch {
     // Releases are best-effort. A 404 (no releases) or any other
@@ -241,9 +261,9 @@ export type GithubOrg = {
  * Check if a GitHub organization is verified. Returns false for user accounts
  * or if the API call fails — never throws.
  */
-export async function fetchOrgVerification(login: string): Promise<boolean> {
+export async function fetchOrgVerification(login: string, options?: GithubRequestOptions): Promise<boolean> {
   try {
-    const org = await gh<GithubOrg>(`/orgs/${encodeURIComponent(login)}`);
+    const org = await gh<GithubOrg>(`/orgs/${encodeURIComponent(login)}`, options);
     return org.is_verified === true;
   } catch {
     return false;
@@ -264,9 +284,9 @@ export type GithubIssue = {
   draft?: boolean;
 };
 
-export async function fetchIssuesAndPrs(owner: string, repo: string): Promise<GithubIssue[] | null> {
+export async function fetchIssuesAndPrs(owner: string, repo: string, options?: GithubRequestOptions): Promise<GithubIssue[] | null> {
   try {
-    return await gh<GithubIssue[]>(`/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues?state=open&sort=updated&direction=desc&per_page=100`);
+    return await gh<GithubIssue[]>(`/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues?state=open&sort=updated&direction=desc&per_page=100`, options);
   } catch {
     return null;
   }
@@ -276,9 +296,9 @@ export type GithubContributor = {
   login: string;
 };
 
-export async function fetchContributors(owner: string, repo: string): Promise<GithubContributor[] | null> {
+export async function fetchContributors(owner: string, repo: string, options?: GithubRequestOptions): Promise<GithubContributor[] | null> {
   try {
-    return await gh<GithubContributor[]>(`/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contributors?per_page=10`);
+    return await gh<GithubContributor[]>(`/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contributors?per_page=10`, options);
   } catch {
     return null;
   }
@@ -289,9 +309,9 @@ export type GithubParticipationStats = {
   owner: number[];
 };
 
-export async function fetchParticipationStats(owner: string, repo: string): Promise<GithubParticipationStats | null> {
+export async function fetchParticipationStats(owner: string, repo: string, options?: GithubRequestOptions): Promise<GithubParticipationStats | null> {
   try {
-    return await gh<GithubParticipationStats>(`/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/stats/participation`);
+    return await gh<GithubParticipationStats>(`/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/stats/participation`, options);
   } catch {
     return null;
   }
@@ -305,9 +325,42 @@ export type GithubCommitResponse = {
   };
 };
 
-export async function fetchCommit(owner: string, repo: string, ref: string): Promise<GithubCommitResponse | null> {
+export async function fetchCommit(owner: string, repo: string, ref: string, options?: GithubRequestOptions): Promise<GithubCommitResponse | null> {
   try {
-    return await gh<GithubCommitResponse>(`/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/commits/${encodeURIComponent(ref)}`);
+    return await gh<GithubCommitResponse>(`/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/commits/${encodeURIComponent(ref)}`, options);
+  } catch {
+    return null;
+  }
+}
+
+/* ========================= Phase 5: Raw File Content ========================= */
+
+const MAX_MANIFEST_SIZE = 256 * 1024; // 256KB — generous for any manifest.
+
+/**
+ * Fetch raw file content from GitHub. Best-effort: returns null on any
+ * failure. Used for dependency manifest parsing.
+ */
+export async function fetchRawFileContent(
+  owner: string,
+  repo: string,
+  branch: string,
+  path: string,
+  options?: GithubRequestOptions,
+): Promise<string | null> {
+  try {
+    const token = options?.token || process.env.GITHUB_TOKEN;
+    const headers: Record<string, string> = {
+      "User-Agent": "RepoContext/0.1 (+https://repocontext.local)",
+    };
+    if (token) headers.Authorization = `Bearer ${token}`;
+
+    const url = `https://raw.githubusercontent.com/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/${encodeURIComponent(branch)}/${path}`;
+    const res = await fetch(url, { headers, next: { revalidate: REVALIDATE_SECONDS } });
+    if (!res.ok) return null;
+    const text = await res.text();
+    if (text.length > MAX_MANIFEST_SIZE) return text.slice(0, MAX_MANIFEST_SIZE);
+    return text;
   } catch {
     return null;
   }

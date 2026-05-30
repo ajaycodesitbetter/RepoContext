@@ -23,10 +23,12 @@ import { FileTree } from "@/components/file-tree";
 import { TopFiles } from "@/components/top-files";
 import { OnboardingBriefCard } from "@/components/onboarding-brief";
 import { InstallPanel } from "@/components/install-panel";
+import { GithubTokenDialog } from "@/components/github-token-dialog";
 import { RateLimitIndicator } from "@/components/rate-limit-indicator";
 import { BackgroundGlobe } from "@/components/background-globe";
 import { RecentSearches, useRecentSearches } from "@/components/recent-searches";
 import { RepositoryHealthPanel } from "@/components/repository-health";
+import { DependencyRiskPanel } from "@/components/dependency-risk-panel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { BriefResponse, ApiError } from "@/lib/types";
@@ -41,7 +43,7 @@ const EXAMPLES = [
 type FetchState =
   | { kind: "idle" }
   | { kind: "loading"; query: string }
-  | { kind: "error"; query: string; message: string }
+  | { kind: "error"; query: string; message: string; code?: string }
   | { kind: "success"; query: string; data: BriefResponse };
 
 export function Explorer() {
@@ -54,13 +56,21 @@ export function Explorer() {
     if (!trimmed) return;
     setState({ kind: "loading", query: trimmed });
     try {
+      const headers: Record<string, string> = { Accept: "application/json" };
+      const { getStoredGithubToken } = await import("@/lib/github-token");
+      const token = getStoredGithubToken();
+      if (token) {
+        headers["x-github-token"] = token;
+      }
+
       const res = await fetch(`/api/repo?url=${encodeURIComponent(trimmed)}`, {
-        headers: { Accept: "application/json" },
+        headers,
       });
       const json = (await res.json()) as BriefResponse | ApiError;
       if (!res.ok) {
         const message = (json as ApiError).error ?? "Something went wrong.";
-        setState({ kind: "error", query: trimmed, message });
+        const code = (json as ApiError).code;
+        setState({ kind: "error", query: trimmed, message, code });
         return;
       }
       addRecent(trimmed);
@@ -131,15 +141,22 @@ export function Explorer() {
               </div>
             </div>
           </div>
-          {hasResult && (
-            <button
-              type="button"
-              onClick={handleReset}
-              className="font-mono text-xs text-muted-foreground transition-colors hover:text-foreground"
-            >
-              new search
-            </button>
-          )}
+          <div className="flex items-center gap-4">
+            <GithubTokenDialog onTokenChange={() => {
+              if (state.kind === 'error') {
+                 void runQuery(state.query);
+              }
+            }} />
+            {hasResult && (
+              <button
+                type="button"
+                onClick={handleReset}
+                className="font-mono text-xs text-muted-foreground transition-colors hover:text-foreground"
+              >
+                new search
+              </button>
+            )}
+          </div>
         </div>
       </header>
 
@@ -177,6 +194,7 @@ export function Explorer() {
                 <ErrorMain
                   query={state.query}
                   message={state.message}
+                  code={state.code}
                   onRetry={handleRetry}
                   onReset={handleReset}
                 />
@@ -351,11 +369,13 @@ function SidebarErrorPlaceholder() {
 function ErrorMain({
   query,
   message,
+  code,
   onRetry,
   onReset,
 }: {
   query: string;
   message: string;
+  code?: string;
   onRetry: () => void;
   onReset: () => void;
 }) {
@@ -374,6 +394,11 @@ function ErrorMain({
             We couldn’t load that repo.
           </p>
           <p className="mt-1 text-sm text-foreground/80">{message}</p>
+          {code && (
+            <p className="mt-1 text-[11px] font-mono text-destructive/80 uppercase tracking-widest">
+              Code: {code}
+            </p>
+          )}
           <p className="mt-2 truncate font-mono text-[11px] text-muted-foreground">
             input:{" "}
             <code className="rounded bg-background px-1.5 py-0.5 text-[11px] text-foreground">
@@ -549,6 +574,14 @@ function SuccessMain({ data }: { data: BriefResponse }) {
           openIssues={data.openIssues}
           openPullRequests={data.openPullRequests}
         />
+        {data.dependencyFiles && data.dependencyFiles.length > 0 && (
+          <DependencyRiskPanel
+            files={data.dependencyFiles}
+            summary={data.dependencySummary}
+            signals={data.dependencyRiskSignals}
+            risk={data.dependencyRiskSummary}
+          />
+        )}
         <Tabs defaultValue="top">
           <TabsList className="grid h-9 max-w-xs grid-cols-2">
             <TabsTrigger value="top" className="gap-1.5 text-xs">

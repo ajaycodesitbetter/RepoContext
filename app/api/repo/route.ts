@@ -23,10 +23,11 @@ export async function GET(
     );
   }
 
-  const result = await getBriefForUrl(url);
+  const token = request.headers.get("x-github-token");
+  const result = await getBriefForUrl(url, token);
 
   if (!result.ok) {
-    return NextResponse.json<ApiError>({ error: result.error }, { status: result.status });
+    return NextResponse.json<ApiError>({ error: result.error, code: result.code }, { status: result.status });
   }
 
   return NextResponse.json<BriefResponse>(result.data, { status: 200 });

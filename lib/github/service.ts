@@ -29,13 +29,23 @@ import {
   sortOpenPullRequests,
   trimWorkItems,
 } from "@/lib/analysis/health";
-import type { BriefResponse, RepoHealth, RepoWorkItem } from "@/lib/types";
+import {
+  detectDependencyFiles,
+  selectFilesToFetch,
+  parseManifest,
+  detectBroadVersionRanges,
+  detectUnpinnedPythonDeps,
+  buildEcosystemSummaries,
+  generateRiskSignals,
+  buildRiskSummary,
+} from "@/lib/analysis/dependencies";
+import type { BriefResponse, RepoHealth, RepoWorkItem, RepoAccessErrorCode } from "@/lib/types";
 
 export type ServiceResult =
   | { ok: true; data: BriefResponse }
-  | { ok: false; status: 400 | 404 | 429 | 502; error: string };
+  | { ok: false; status: 400 | 401 | 403 | 404 | 429 | 502; error: string; code?: RepoAccessErrorCode };
 
-export async function getBriefForUrl(input: string): Promise<ServiceResult> {
+export async function getBriefForUrl(input: string, token?: string | null): Promise<ServiceResult> {
   const parsed = parseRepoUrl(input);
   if (!parsed) {
     return {
@@ -47,12 +57,24 @@ export async function getBriefForUrl(input: string): Promise<ServiceResult> {
   }
 
   // Mock fallback when no token is configured.
-  if (!hasGithubToken()) {
+  if (!hasGithubToken() && !token) {
     return { ok: true, data: buildMockResponse(parsed.owner, parsed.repo) };
   }
 
   try {
-    const repo = await fetchRepo(parsed.owner, parsed.repo);
+    const repo = await fetchRepo(parsed.owner, parsed.repo, { token });
+
+    // ── Security gate: private repos require an explicit user token. ──
+    // The server's GITHUB_TOKEN is used only for public-repo rate-limit
+    // relief. It must NEVER silently authorize private repo access.
+    if (repo.private && !token) {
+      return {
+        ok: false,
+        status: 403,
+        error: "This is a private repository. Add a GitHub token to access it.",
+        code: "private_repo_requires_token",
+      };
+    }
 
     // Use explicit branch from URL if provided, otherwise default.
     const effectiveBranch = parsed.branch ?? repo.default_branch;
@@ -70,14 +92,14 @@ export async function getBriefForUrl(input: string): Promise<ServiceResult> {
       stats,
       latestCommit,
     ] = await Promise.all([
-      fetchTree(parsed.owner, parsed.repo, effectiveBranch),
-      fetchOwnerProfile(repo.owner.login).catch(() => null),
-      fetchReleases(parsed.owner, parsed.repo),
-      fetchOrgVerification(repo.owner.login),
-      import("@/lib/github/client").then((m) => m.fetchIssuesAndPrs(parsed.owner, parsed.repo)),
-      import("@/lib/github/client").then((m) => m.fetchContributors(parsed.owner, parsed.repo)),
-      import("@/lib/github/client").then((m) => m.fetchParticipationStats(parsed.owner, parsed.repo)),
-      import("@/lib/github/client").then((m) => m.fetchCommit(parsed.owner, parsed.repo, repo.default_branch)),
+      fetchTree(parsed.owner, parsed.repo, effectiveBranch, { token }),
+      fetchOwnerProfile(repo.owner.login, { token }).catch(() => null),
+      fetchReleases(parsed.owner, parsed.repo, { token }),
+      fetchOrgVerification(repo.owner.login, { token }),
+      import("@/lib/github/client").then((m) => m.fetchIssuesAndPrs(parsed.owner, parsed.repo, { token })),
+      import("@/lib/github/client").then((m) => m.fetchContributors(parsed.owner, parsed.repo, { token })),
+      import("@/lib/github/client").then((m) => m.fetchParticipationStats(parsed.owner, parsed.repo, { token })),
+      import("@/lib/github/client").then((m) => m.fetchCommit(parsed.owner, parsed.repo, repo.default_branch, { token })),
     ]);
 
     const inferred = inferOwnerLocation(ownerProfileResult?.location ?? null);
@@ -162,6 +184,70 @@ export async function getBriefForUrl(input: string): Promise<ServiceResult> {
       communityBreadth: classifyCommunityBreadth(contributorCount),
     };
 
+    // ── Phase 5: Dependency & Risk analysis ──
+    const dependencyData = await (async () => {
+      try {
+        const depFiles = detectDependencyFiles(ranked);
+        if (depFiles.length === 0) {
+          return {
+            dependencyFiles: [],
+            dependencySummary: [],
+            dependencyRiskSignals: generateRiskSignals([], [], false),
+            dependencyRiskSummary: null,
+          };
+        }
+
+        // Fetch manifest content for dependency counting.
+        const filesToFetch = selectFilesToFetch(depFiles);
+        const { fetchRawFileContent } = await import("@/lib/github/client");
+        const contentResults = await Promise.all(
+          filesToFetch.map(async (path) => {
+            const content = await fetchRawFileContent(parsed.owner, parsed.repo, effectiveBranch, path, { token });
+            return { path, content };
+          }),
+        );
+
+        // Parse dependency counts.
+        const depCounts = new Map<string, number | null>();
+        let broadRangeDetected = false;
+        for (const { path, content } of contentResults) {
+          if (!content) continue;
+          const basename = path.split("/").pop() ?? "";
+          depCounts.set(path, parseManifest(basename, content));
+          // Check for broad version ranges.
+          if (basename === "package.json" && detectBroadVersionRanges(content)) {
+            broadRangeDetected = true;
+          }
+          if (basename === "requirements.txt" && detectUnpinnedPythonDeps(content)) {
+            broadRangeDetected = true;
+          }
+        }
+
+        const summaries = buildEcosystemSummaries(depFiles, depCounts);
+        const signals = generateRiskSignals(depFiles, summaries, broadRangeDetected);
+        const riskSummary = buildRiskSummary(summaries, signals);
+
+        return {
+          dependencyFiles: depFiles,
+          dependencySummary: summaries,
+          dependencyRiskSignals: signals,
+          dependencyRiskSummary: riskSummary,
+        };
+      } catch {
+        // Dependency analysis must never fail the brief.
+        return {
+          dependencyFiles: [],
+          dependencySummary: [],
+          dependencyRiskSignals: [{
+            code: "dependency_data_unavailable" as const,
+            severity: "info" as const,
+            message: "Dependency analysis encountered an error and is unavailable.",
+          }],
+          dependencyRiskSummary: null,
+        };
+      }
+    })();
+
     return {
       ok: true,
       data: {
@@ -193,14 +279,27 @@ export async function getBriefForUrl(input: string): Promise<ServiceResult> {
         health,
         openIssues,
         openPullRequests,
+        ...dependencyData,
       },
     };
-  } catch (e) {
+  } catch (e: any) {
     if (e instanceof GithubError) {
-      const status = (e.status === 404 || e.status === 429 || e.status === 502)
+      const status = (e.status === 401 || e.status === 403 || e.status === 404 || e.status === 429 || e.status === 502)
         ? e.status
         : 502;
-      return { ok: false, status, error: e.message };
+        
+      let code: RepoAccessErrorCode | undefined = undefined;
+      
+      if (status === 404 && !token) code = "private_repo_requires_token";
+      else if (status === 404 && token) code = "repo_not_found";
+      else if (status === 401) code = "invalid_token";
+      else if (status === 403) {
+        if (e.message.includes("permission")) code = "insufficient_scope";
+        else code = "forbidden";
+      }
+      else if (status === 429) code = "rate_limited";
+      
+      return { ok: false, status, error: e.message, code };
     }
     return {
       ok: false,

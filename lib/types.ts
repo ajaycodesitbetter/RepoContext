@@ -125,7 +125,55 @@ export type BriefResponse = {
   health?: RepoHealth;
   openIssues?: RepoWorkItem[];
   openPullRequests?: RepoWorkItem[];
+
+  // --- Phase 5 Additions ---
+  dependencyFiles?: DependencyFileEvidence[];
+  dependencySummary?: EcosystemDependencySummary[];
+  dependencyRiskSignals?: DependencyRiskSignal[];
+  dependencyRiskSummary?: DependencyRiskSummary | null;
 };
+
+/* ========================= Phase 5: Dependency & Risk ========================= */
+
+export type DependencyEcosystem = "node" | "python" | "go" | "rust";
+
+export type DependencyFileEvidence = {
+  path: string;
+  kind: "manifest" | "lockfile";
+  ecosystem: DependencyEcosystem;
+};
+
+export type EcosystemDependencySummary = {
+  ecosystem: DependencyEcosystem;
+  manifests: string[];
+  lockfiles: string[];
+  directDependencyCount: number | null;
+  hasLockfile: boolean;
+};
+
+export type DependencyRiskSignalCode =
+  | "manifest_without_lockfile"
+  | "multiple_ecosystems"
+  | "broad_version_ranges"
+  | "known_vulnerability_indicator"
+  | "dependency_data_unavailable"
+  | "no_dependency_manifests";
+
+export type DependencyRiskSignal = {
+  code: DependencyRiskSignalCode;
+  severity: "info" | "warning" | "high";
+  message: string;
+};
+
+export type DependencyHygiene = "strong" | "mixed" | "weak";
+export type SupplyChainExposure = "low" | "moderate" | "high";
+
+export type DependencyRiskSummary = {
+  hygiene: DependencyHygiene | null;
+  supplyChainExposure: SupplyChainExposure | null;
+};
+
+/* ========================= Health Types ========================= */
 
 export type HealthStatus = "active" | "slowing" | "stale";
 export type ReviewPressure = "low" | "moderate" | "high";
@@ -154,9 +202,19 @@ export type RepoWorkItem = {
   isDraft?: boolean;
 };
 
+export type RepoAccessErrorCode =
+  | "repo_not_found"
+  | "private_repo_requires_token"
+  | "invalid_token"
+  | "insufficient_scope"
+  | "forbidden"
+  | "rate_limited";
+
 export type ApiError = {
   error: string;
+  code?: RepoAccessErrorCode;
 };
 
 /** Status codes the route handler may return. */
-export type ApiStatus = 200 | 400 | 404 | 429 | 502;
+export type ApiStatus = 200 | 400 | 401 | 403 | 404 | 429 | 502;
+
