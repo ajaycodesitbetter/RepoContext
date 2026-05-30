@@ -40,36 +40,40 @@ export function OnboardingBriefCard({
       className="overflow-hidden rounded-xl border border-border bg-card/10 backdrop-blur-sm"
     >
       {/* Header */}
-      <div className="flex items-center gap-2 border-b border-border bg-muted/40 px-4 py-2.5">
-        <Sparkles
-          aria-hidden="true"
-          className="h-3.5 w-3.5 text-amber-500"
-        />
-        <h2 className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
-          onboarding brief
-        </h2>
-        <span
-          aria-hidden="true"
-          className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground/60"
-        >
-          heuristic · no AI
-        </span>
-        <CopyBriefButton
-          meta={meta}
-          projectType={projectType}
-          onboarding={onboarding}
-          branch={branch}
-        />
-        <ExportLlmButton
-          meta={meta}
-          topFiles={topFiles}
-          branch={branch}
-        />
-        <QuickDownloadButton
-          meta={meta}
-          topFiles={topFiles}
-          branch={branch}
-        />
+      <div className="flex items-center gap-3 overflow-x-auto border-b border-border bg-muted/40 px-4 py-2.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex shrink-0 items-center gap-2">
+          <Sparkles
+            aria-hidden="true"
+            className="h-3.5 w-3.5 text-amber-500"
+          />
+          <h2 className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+            onboarding brief
+          </h2>
+          <span
+            aria-hidden="true"
+            className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground/60"
+          >
+            heuristic · no AI
+          </span>
+        </div>
+        <div className="ml-auto flex shrink-0 items-center gap-2">
+          <CopyBriefButton
+            meta={meta}
+            projectType={projectType}
+            onboarding={onboarding}
+            branch={branch}
+          />
+          <ExportLlmButton
+            meta={meta}
+            topFiles={topFiles}
+            branch={branch}
+          />
+          <QuickDownloadButton
+            meta={meta}
+            topFiles={topFiles}
+            branch={branch}
+          />
+        </div>
       </div>
 
       {/* Project type */}
