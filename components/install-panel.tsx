@@ -197,15 +197,22 @@ function AssetCard({
 
 export function InstallPanel({
   release,
+  prerelease,
   owner,
   repo,
 }: {
-  release: ReleaseInfo;
+  release: ReleaseInfo | null;
+  prerelease?: ReleaseInfo | null;
   owner: string;
   repo: string;
 }) {
-  const publishDate = formatDate(release.publishedAt);
-  const totalDownloads = release.assets.reduce(
+  const [showPrerelease, setShowPrerelease] = React.useState(!!prerelease && !release);
+  const activeRelease = showPrerelease ? prerelease : release;
+
+  if (!activeRelease) return null;
+
+  const publishDate = formatDate(activeRelease.publishedAt);
+  const totalDownloads = activeRelease.assets.reduce(
     (sum, a) => sum + a.downloadCount,
     0,
   );
@@ -232,17 +239,28 @@ export function InstallPanel({
         {/* Tag name */}
         <span className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2 py-0.5 font-mono text-[10px] font-semibold text-foreground">
           <Tag aria-hidden="true" className="h-2.5 w-2.5" />
-          {release.tagName}
+          {activeRelease.tagName}
         </span>
 
-        {release.isPrerelease && (
+        {activeRelease.isPrerelease && (
           <span className="rounded-full bg-amber-500/15 px-2 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wide text-amber-700 ring-1 ring-amber-500/30 dark:text-amber-300">
             pre-release
           </span>
         )}
 
+        {/* Toggle if both exist */}
+        {release && prerelease && (
+          <button
+            type="button"
+            onClick={() => setShowPrerelease((p) => !p)}
+            className="rounded border border-border bg-background px-2 py-0.5 font-mono text-[10px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            {showPrerelease ? "Switch to Stable" : "Show Pre-release"}
+          </button>
+        )}
+
         {/* Verified badge */}
-        {release.trustSignals.isVerifiedPublisher && (
+        {activeRelease.trustSignals.isVerifiedPublisher && (
           <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-700 ring-1 ring-emerald-500/30 dark:text-emerald-300">
             <ShieldCheck aria-hidden="true" className="h-3 w-3" />
             Verified
@@ -258,7 +276,7 @@ export function InstallPanel({
             </span>
           )}
           <a
-            href={release.htmlUrl}
+            href={activeRelease.htmlUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1 transition-colors hover:text-foreground"
@@ -271,11 +289,11 @@ export function InstallPanel({
 
       {/* Asset grid */}
       <div className="space-y-2 p-3">
-        {release.assets.map((asset, i) => (
+        {activeRelease.assets.map((asset, i) => (
           <AssetCard
             key={asset.name}
             asset={asset}
-            sha256={release.trustSignals.sha256[asset.name] ?? null}
+            sha256={activeRelease.trustSignals.sha256[asset.name] ?? null}
             index={i}
           />
         ))}

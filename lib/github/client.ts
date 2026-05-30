@@ -36,11 +36,28 @@ function authHeaders(): Record<string, string> {
   return headers;
 }
 
+/* ========================= Rate Limit Tracking ========================= */
+
+/** Module-scoped capture of the last seen rate limit headers. */
+let lastRateLimit: { remaining: number; limit: number } | null = null;
+
+/** Returns the most recent rate limit values extracted from GitHub responses. */
+export function getLastRateLimit(): { remaining: number; limit: number } | null {
+  return lastRateLimit;
+}
+
 async function gh<T>(path: string): Promise<T> {
   const res = await fetch(`${GITHUB_API}${path}`, {
     headers: authHeaders(),
     next: { revalidate: REVALIDATE_SECONDS },
   });
+
+  // Capture rate limit headers from every response (success or error).
+  const remaining = res.headers.get("x-ratelimit-remaining");
+  const limit = res.headers.get("x-ratelimit-limit");
+  if (remaining && limit) {
+    lastRateLimit = { remaining: Number(remaining), limit: Number(limit) };
+  }
 
   if (res.status === 200) {
     return (await res.json()) as T;

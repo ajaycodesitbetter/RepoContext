@@ -13,6 +13,7 @@ import {
   fetchOrgVerification,
   hasGithubToken,
   GithubError,
+  getLastRateLimit,
 } from "@/lib/github/client";
 import { buildMockResponse } from "@/lib/github/mock";
 import { rankFiles, pickTopFiles } from "@/lib/github/rank-files";
@@ -122,7 +123,9 @@ export async function getBriefForUrl(input: string): Promise<ServiceResult> {
         projectType,
         onboarding,
         treeTruncated: tree.truncated === true,
-        release: releaseInfo,
+        release: releaseInfo?.stable ?? null,
+        prerelease: releaseInfo?.prerelease ?? null,
+        rateLimit: getLastRateLimit(),
       },
     };
   } catch (e) {

@@ -23,6 +23,7 @@ import { FileTree } from "@/components/file-tree";
 import { TopFiles } from "@/components/top-files";
 import { OnboardingBriefCard } from "@/components/onboarding-brief";
 import { InstallPanel } from "@/components/install-panel";
+import { RateLimitIndicator } from "@/components/rate-limit-indicator";
 import { BackgroundGlobe } from "@/components/background-globe";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -179,6 +180,10 @@ export function Explorer() {
           </div>
         )}
       </main>
+
+      <RateLimitIndicator
+        rateLimit={state.kind === "success" ? state.data.rateLimit : null}
+      />
     </div>
   );
 }
@@ -509,13 +514,15 @@ function SuccessMain({ data }: { data: BriefResponse }) {
           meta={data.meta}
           projectType={data.projectType}
           onboarding={data.onboarding}
+          topFiles={data.topFiles}
           owner={data.meta.owner}
           repo={data.meta.repo}
-          branch={data.meta.defaultBranch}
+          branch={data.meta.exploredBranch ?? data.meta.defaultBranch}
         />
-        {data.release && (
+        {(data.release || data.prerelease) && (
           <InstallPanel
             release={data.release}
+            prerelease={data.prerelease}
             owner={data.meta.owner}
             repo={data.meta.repo}
           />
@@ -543,7 +550,7 @@ function SuccessMain({ data }: { data: BriefResponse }) {
               files={data.topFiles}
               owner={data.meta.owner}
               repo={data.meta.repo}
-              branch={data.meta.defaultBranch}
+              branch={data.meta.exploredBranch ?? data.meta.defaultBranch}
             />
           </TabsContent>
 

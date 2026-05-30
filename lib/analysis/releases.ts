@@ -178,20 +178,10 @@ function findLatestStable(releases: GithubRelease[]): GithubRelease | null {
   return releases.find((r) => !r.draft) ?? null;
 }
 
-/**
- * Main entry: process a list of GitHub releases into an install panel payload.
- * Returns null if no installable assets are found — the panel should be hidden.
- */
-export async function processReleases(
-  releases: GithubRelease[] | null,
-  isVerifiedPublisher: boolean = false,
+async function processSingleRelease(
+  release: GithubRelease,
+  isVerifiedPublisher: boolean,
 ): Promise<ReleaseInfo | null> {
-  if (!releases || releases.length === 0) return null;
-
-  const release = findLatestStable(releases);
-  if (!release) return null;
-
-  // Separate installable assets from checksum files
   const installableAssets: ReleaseAsset[] = [];
   const checksumAssets: GithubRelease["assets"] = [];
 
@@ -210,10 +200,8 @@ export async function processReleases(
     }
   }
 
-  // If no installable assets → panel stays hidden
   if (installableAssets.length === 0) return null;
 
-  // Fetch checksums from any companion .sha256 files
   const sha256 = checksumAssets.length > 0
     ? await fetchChecksums(checksumAssets)
     : {};
@@ -232,4 +220,36 @@ export async function processReleases(
     assets: installableAssets,
     trustSignals,
   };
+}
+
+/**
+ * Main entry: process a list of GitHub releases into an install panel payload.
+ * Returns both the stable release and a prerelease (if newer).
+ */
+export async function processReleases(
+  releases: GithubRelease[] | null,
+  isVerifiedPublisher: boolean = false,
+): Promise<{ stable: ReleaseInfo | null; prerelease: ReleaseInfo | null } | null> {
+  if (!releases || releases.length === 0) return null;
+
+  const stableRaw = findLatestStable(releases);
+  const prereleaseRaw = releases.find((r) => !r.draft && r.prerelease);
+
+  const stable = stableRaw ? await processSingleRelease(stableRaw, isVerifiedPublisher) : null;
+  let prerelease = null;
+
+  if (
+    prereleaseRaw &&
+    stableRaw &&
+    prereleaseRaw.tag_name !== stableRaw.tag_name &&
+    new Date(prereleaseRaw.published_at ?? 0) > new Date(stableRaw.published_at ?? 0)
+  ) {
+    prerelease = await processSingleRelease(prereleaseRaw, isVerifiedPublisher);
+  } else if (prereleaseRaw && !stableRaw) {
+    prerelease = await processSingleRelease(prereleaseRaw, isVerifiedPublisher);
+  }
+
+  if (!stable && !prerelease) return null;
+
+  return { stable, prerelease };
 }

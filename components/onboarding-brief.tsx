@@ -1,7 +1,9 @@
 import { Compass, FileText, FolderTree, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CopyBriefButton } from "@/components/copy-brief-button";
-import type { OnboardingBrief, ProjectType, RepoMeta } from "@/lib/types";
+import { ExportLlmButton } from "@/components/export-llm-button";
+import { QuickDownloadButton } from "@/components/quick-download-button";
+import type { OnboardingBrief, ProjectType, RepoMeta, TreeEntry } from "@/lib/types";
 
 const CONFIDENCE_STYLES: Record<ProjectType["confidence"], string> = {
   high: "bg-emerald-500/15 text-emerald-700 ring-1 ring-emerald-500/30 dark:text-emerald-300",
@@ -14,6 +16,7 @@ export function OnboardingBriefCard({
   meta,
   projectType,
   onboarding,
+  topFiles,
   owner,
   repo,
   branch,
@@ -21,6 +24,7 @@ export function OnboardingBriefCard({
   meta: RepoMeta;
   projectType: ProjectType | null;
   onboarding: OnboardingBrief;
+  topFiles: TreeEntry[];
   owner: string;
   repo: string;
   branch: string;
@@ -54,6 +58,16 @@ export function OnboardingBriefCard({
           meta={meta}
           projectType={projectType}
           onboarding={onboarding}
+          branch={branch}
+        />
+        <ExportLlmButton
+          meta={meta}
+          topFiles={topFiles}
+          branch={branch}
+        />
+        <QuickDownloadButton
+          meta={meta}
+          topFiles={topFiles}
           branch={branch}
         />
       </div>

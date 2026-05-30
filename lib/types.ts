@@ -116,6 +116,10 @@ export type BriefResponse = {
   treeTruncated: boolean;
   /** Release info — only present when the latest stable release has installable assets. */
   release: ReleaseInfo | null;
+  /** Latest pre-release (if it has installable assets and is newer than stable). */
+  prerelease?: ReleaseInfo | null;
+  /** Rate limit info from the last GitHub API response — used for the UI indicator. */
+  rateLimit?: { remaining: number; limit: number } | null;
 };
 
 export type ApiError = {

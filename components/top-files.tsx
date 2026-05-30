@@ -1,6 +1,7 @@
 import { ArrowUpRight } from "lucide-react";
 import { getFileIconInfo } from "@/lib/file-icons";
 import { getFileReason } from "@/lib/file-reasons";
+import { CopyFileButton } from "@/components/copy-file-button";
 import { cn } from "@/lib/utils";
 import type { TreeEntry } from "@/lib/types";
 
@@ -92,8 +93,14 @@ export function TopFiles({
                 )}
               </div>
 
-              {/* Score + open arrow */}
+              {/* Score + copy + open arrow */}
               <div className="flex shrink-0 items-center gap-2">
+                <CopyFileButton
+                  owner={owner}
+                  repo={repo}
+                  branch={branch}
+                  filePath={file.path}
+                />
                 <div className="flex flex-col items-end gap-1">
                   <span className="font-mono text-[10px] font-medium tabular-nums text-foreground">
                     {file.importanceScore}

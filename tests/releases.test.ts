@@ -35,34 +35,34 @@ describe("release asset filtering", () => {
     const result = await processReleases([
       fakeRelease([{ name: "App-1.0-macos.dmg" }]),
     ]);
-    assert.ok(result, "Expected a non-null result");
-    assert.strictEqual(result.assets.length, 1);
-    assert.strictEqual(result.assets[0].name, "App-1.0-macos.dmg");
+    assert.ok(result?.stable, "Expected a non-null stable result");
+    assert.strictEqual(result.stable.assets.length, 1);
+    assert.strictEqual(result.stable.assets[0].name, "App-1.0-macos.dmg");
   });
 
   it(".AppImage asset is included", async () => {
     const result = await processReleases([
       fakeRelease([{ name: "App-1.0-linux-x86_64.AppImage" }]),
     ]);
-    assert.ok(result);
-    assert.strictEqual(result.assets.length, 1);
-    assert.strictEqual(result.assets[0].name, "App-1.0-linux-x86_64.AppImage");
+    assert.ok(result?.stable);
+    assert.strictEqual(result.stable.assets.length, 1);
+    assert.strictEqual(result.stable.assets[0].name, "App-1.0-linux-x86_64.AppImage");
   });
 
   it(".exe asset is included", async () => {
     const result = await processReleases([
       fakeRelease([{ name: "Installer.exe" }]),
     ]);
-    assert.ok(result);
-    assert.strictEqual(result.assets.length, 1);
+    assert.ok(result?.stable);
+    assert.strictEqual(result.stable.assets.length, 1);
   });
 
   it(".deb asset is included", async () => {
     const result = await processReleases([
       fakeRelease([{ name: "app_1.0_amd64.deb" }]),
     ]);
-    assert.ok(result);
-    assert.strictEqual(result.assets.length, 1);
+    assert.ok(result?.stable);
+    assert.strictEqual(result.stable.assets.length, 1);
   });
 
   it(".tar.gz asset is EXCLUDED", async () => {
@@ -72,9 +72,9 @@ describe("release asset filtering", () => {
         { name: "App-1.0-linux-x86_64.tar.gz" },
       ]),
     ]);
-    assert.ok(result);
-    assert.strictEqual(result.assets.length, 1, "tar.gz should be filtered out");
-    assert.strictEqual(result.assets[0].name, "App-1.0-macos.dmg");
+    assert.ok(result?.stable);
+    assert.strictEqual(result.stable.assets.length, 1, "tar.gz should be filtered out");
+    assert.strictEqual(result.stable.assets[0].name, "App-1.0-macos.dmg");
   });
 
   it(".zip asset is EXCLUDED", async () => {
@@ -84,9 +84,9 @@ describe("release asset filtering", () => {
         { name: "NHQM_v1.0.zip" },
       ]),
     ]);
-    assert.ok(result);
-    assert.strictEqual(result.assets.length, 1, "zip should be filtered out");
-    assert.strictEqual(result.assets[0].name, "App-1.0-win.exe");
+    assert.ok(result?.stable);
+    assert.strictEqual(result.stable.assets.length, 1, "zip should be filtered out");
+    assert.strictEqual(result.stable.assets[0].name, "App-1.0-win.exe");
   });
 
   it(".tar.xz asset is EXCLUDED", async () => {
@@ -96,8 +96,8 @@ describe("release asset filtering", () => {
         { name: "source.tar.xz" },
       ]),
     ]);
-    assert.ok(result);
-    assert.strictEqual(result.assets.length, 1);
+    assert.ok(result?.stable);
+    assert.strictEqual(result.stable.assets.length, 1);
   });
 
   it("checksum .sha256 file is excluded from assets", async () => {
@@ -108,9 +108,9 @@ describe("release asset filtering", () => {
         { name: "App.dmg.sha256" },
       ]),
     ]);
-    assert.ok(result);
-    assert.strictEqual(result.assets.length, 1);
-    assert.strictEqual(result.assets[0].name, "App.dmg");
+    assert.ok(result?.stable);
+    assert.strictEqual(result.stable.assets.length, 1);
+    assert.strictEqual(result.stable.assets[0].name, "App.dmg");
   });
 
   it("release with ONLY .tar.gz returns null (panel hidden)", async () => {
@@ -146,9 +146,9 @@ describe("release asset filtering", () => {
         { name: "SHA256SUMS.txt" },
       ]),
     ]);
-    assert.ok(result);
-    assert.strictEqual(result.assets.length, 5, "dmg + AppImage + deb + rpm + apk");
-    const names = result.assets.map((a) => a.name);
+    assert.ok(result?.stable);
+    assert.strictEqual(result.stable.assets.length, 5, "dmg + AppImage + deb + rpm + apk");
+    const names = result.stable.assets.map((a) => a.name);
     assert.ok(!names.some((n) => n.endsWith(".tar.gz")), "no tar.gz");
     assert.ok(!names.some((n) => n.endsWith(".zip")), "no zip");
   });
