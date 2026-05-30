@@ -184,7 +184,7 @@ export type RepoHealth = {
   defaultBranchLastCommitAt: string | null;
   openIssuesCount: number | null;
   openPullRequestsCount: number | null;
-  contributorCount: number | null;
+  contributorCount: number | string | null;
   recentCommitCount4w: number | null;
   activityStatus: HealthStatus | null;
   reviewPressure: ReviewPressure | null;

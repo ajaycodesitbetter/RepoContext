@@ -105,16 +105,28 @@ export function DependencyRiskPanel({
                   </span>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
-                  {s.manifests.map(m => (
-                    <span key={m} className="inline-flex items-center gap-1 rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground font-mono">
+                  {Object.entries(
+                    s.manifests.reduce((acc, m) => {
+                      const name = m.split("/").pop() || m;
+                      acc[name] = (acc[name] || 0) + 1;
+                      return acc;
+                    }, {} as Record<string, number>)
+                  ).map(([name, count]) => (
+                    <span key={name} className="inline-flex items-center gap-1 rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground font-mono">
                       <FileText className="h-3 w-3" />
-                      {m.split("/").pop()}
+                      {name}{count > 1 ? ` (${count})` : ""}
                     </span>
                   ))}
-                  {s.lockfiles.map(l => (
-                    <span key={l} className="inline-flex items-center gap-1 rounded bg-muted/50 border border-border px-2 py-0.5 text-xs text-muted-foreground font-mono">
+                  {Object.entries(
+                    s.lockfiles.reduce((acc, l) => {
+                      const name = l.split("/").pop() || l;
+                      acc[name] = (acc[name] || 0) + 1;
+                      return acc;
+                    }, {} as Record<string, number>)
+                  ).map(([name, count]) => (
+                    <span key={name} className="inline-flex items-center gap-1 rounded bg-muted/50 border border-border px-2 py-0.5 text-xs text-muted-foreground font-mono">
                       <FileText className="h-3 w-3" />
-                      {l.split("/").pop()}
+                      {name}{count > 1 ? ` (${count})` : ""}
                     </span>
                   ))}
                 </div>

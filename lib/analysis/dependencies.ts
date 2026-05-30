@@ -301,7 +301,13 @@ export function buildEcosystemSummaries(
         manifests: d.manifests,
         lockfiles: d.lockfiles,
         directDependencyCount: d.count,
-        hasLockfile: d.lockfiles.length > 0,
+        hasLockfile: d.manifests.length > 0 && d.manifests.every(m => {
+          const dir = m.includes('/') ? m.substring(0, m.lastIndexOf('/')) : "";
+          return d.lockfiles.some(l => {
+            const lDir = l.includes('/') ? l.substring(0, l.lastIndexOf('/')) : "";
+            return dir === lDir;
+          });
+        }),
       };
     });
 }

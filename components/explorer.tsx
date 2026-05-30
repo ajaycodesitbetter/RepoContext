@@ -140,6 +140,7 @@ export function Explorer() {
                 public repo briefs
               </div>
             </div>
+            <span className="sr-only"> - </span>
           </div>
           <div className="flex items-center gap-4">
             <GithubTokenDialog onTokenChange={() => {

@@ -102,22 +102,6 @@ export function RepositoryHealthPanel({
 }
 
 function WorkItemList({ title, icon, items }: { title: string; icon: React.ReactNode; items?: RepoWorkItem[] | null }) {
-  if (!items) {
-    return (
-      <div className="rounded-md border border-border bg-card p-6 text-center text-sm text-muted-foreground">
-        {title} unavailable
-      </div>
-    );
-  }
-
-  if (items.length === 0) {
-    return (
-      <div className="rounded-md border border-border bg-card p-6 text-center text-sm text-muted-foreground">
-        No open items found
-      </div>
-    );
-  }
-
   return (
     <div className="rounded-md border border-border bg-card overflow-hidden">
       <div className="border-b border-border bg-muted/40 px-4 py-3">
@@ -126,8 +110,17 @@ function WorkItemList({ title, icon, items }: { title: string; icon: React.React
           {title}
         </h3>
       </div>
-      <ul className="divide-y divide-border">
-        {items.map((item) => (
+      {!items ? (
+        <div className="p-6 text-center text-sm text-muted-foreground">
+          {title} unavailable
+        </div>
+      ) : items.length === 0 ? (
+        <div className="p-6 text-center text-sm text-muted-foreground">
+          No open items found
+        </div>
+      ) : (
+        <ul className="divide-y divide-border">
+          {items.map((item) => (
           <li key={item.number} className="p-3 hover:bg-muted/30 transition-colors">
             <a href={item.url} target="_blank" rel="noopener noreferrer" className="block group">
               <div className="flex items-start justify-between gap-2">
@@ -155,7 +148,8 @@ function WorkItemList({ title, icon, items }: { title: string; icon: React.React
             </a>
           </li>
         ))}
-      </ul>
+        </ul>
+      )}
     </div>
   );
 }

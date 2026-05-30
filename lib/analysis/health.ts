@@ -23,8 +23,9 @@ export function classifyReviewPressure(openIssuesCount: number | null, openPullR
   return "high";
 }
 
-export function classifyCommunityBreadth(contributorCount: number | null): CommunityBreadth | null {
+export function classifyCommunityBreadth(contributorCount: number | string | null): CommunityBreadth | null {
   if (contributorCount === null) return null;
+  if (typeof contributorCount === "string") return "broad";
   
   if (contributorCount === 1) return "solo";
   if (contributorCount <= 5) return "small-team";

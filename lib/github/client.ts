@@ -298,7 +298,7 @@ export type GithubContributor = {
 
 export async function fetchContributors(owner: string, repo: string, options?: GithubRequestOptions): Promise<GithubContributor[] | null> {
   try {
-    return await gh<GithubContributor[]>(`/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contributors?per_page=10`, options);
+    return await gh<GithubContributor[]>(`/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contributors?per_page=100`, options);
   } catch {
     return null;
   }

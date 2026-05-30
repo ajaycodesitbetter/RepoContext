@@ -165,7 +165,7 @@ export async function getBriefForUrl(input: string, token?: string | null): Prom
     const fallbackCount = typeof repo.open_issues_count === "number" ? repo.open_issues_count : null;
     const openIssuesCount = issuesAndPrs ? openIssuesRaw.length : fallbackCount;
     const openPullRequestsCount = issuesAndPrs ? openPrsRaw.length : null;
-    const contributorCount = contributors ? contributors.length : null;
+    const contributorCount = contributors ? (contributors.length === 100 ? "100+" : contributors.length) : null;
     
     // For stats, we just sum the last 4 weeks of 'all' commits
     const recentCommitCount4w = stats && stats.all && stats.all.length >= 4
