@@ -21,6 +21,7 @@ import { RepoMeta } from "@/components/repo-meta";
 import { FileTree } from "@/components/file-tree";
 import { TopFiles } from "@/components/top-files";
 import { OnboardingBriefCard } from "@/components/onboarding-brief";
+import { InstallPanel } from "@/components/install-panel";
 import { BackgroundGlobe } from "@/components/background-globe";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -494,6 +495,13 @@ function SuccessMain({ data }: { data: BriefResponse }) {
           repo={data.meta.repo}
           branch={data.meta.defaultBranch}
         />
+        {data.release && (
+          <InstallPanel
+            release={data.release}
+            owner={data.meta.owner}
+            repo={data.meta.repo}
+          />
+        )}
         <Tabs defaultValue="top">
           <TabsList className="grid h-9 max-w-xs grid-cols-2">
             <TabsTrigger value="top" className="gap-1.5 text-xs">

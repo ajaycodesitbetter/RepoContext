@@ -5,7 +5,7 @@
  */
 import "server-only";
 
-import type { BriefResponse } from "@/lib/types";
+import type { BriefResponse, ReleaseInfo } from "@/lib/types";
 import { rankFiles, pickTopFiles } from "@/lib/github/rank-files";
 import { inferOwnerLocation } from "@/lib/github/infer-location";
 import { detectProjectType } from "@/lib/analysis/detect-project-type";
@@ -45,6 +45,54 @@ const MOCK_TREE_RAW: Array<{ path: string; type: "blob" | "tree"; size: number |
   { path: "public/logo.svg", type: "blob", size: 1180 },
 ];
 
+/* ========================= Mock Release ========================= */
+
+const MOCK_RELEASE: ReleaseInfo = {
+  tagName: "v2.1.0",
+  name: "v2.1.0 — Stable Release",
+  publishedAt: "2026-04-15T10:30:00Z",
+  isPrerelease: false,
+  htmlUrl: "https://github.com/octocat/hello-world/releases/tag/v2.1.0",
+  assets: [
+    {
+      name: "hello-world-2.1.0-win-x64.exe",
+      size: 45_200_000,
+      downloadCount: 12_840,
+      downloadUrl:
+        "https://github.com/octocat/hello-world/releases/download/v2.1.0/hello-world-2.1.0-win-x64.exe",
+      contentType: "application/octet-stream",
+      platform: "Windows (x64)",
+    },
+    {
+      name: "hello-world-2.1.0-macos-arm64.dmg",
+      size: 52_100_000,
+      downloadCount: 8_320,
+      downloadUrl:
+        "https://github.com/octocat/hello-world/releases/download/v2.1.0/hello-world-2.1.0-macos-arm64.dmg",
+      contentType: "application/octet-stream",
+      platform: "macOS (ARM64)",
+    },
+    {
+      name: "hello-world-2.1.0-linux-x64.AppImage",
+      size: 48_700_000,
+      downloadCount: 6_150,
+      downloadUrl:
+        "https://github.com/octocat/hello-world/releases/download/v2.1.0/hello-world-2.1.0-linux-x64.AppImage",
+      contentType: "application/octet-stream",
+      platform: "Linux (x64)",
+    },
+  ],
+  trustSignals: {
+    sha256: {
+      "hello-world-2.1.0-win-x64.exe":
+        "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
+      "hello-world-2.1.0-macos-arm64.dmg":
+        "f6e5d4c3b2a1f6e5d4c3b2a1f6e5d4c3b2a1f6e5d4c3b2a1f6e5d4c3b2a1f6e5",
+    },
+    isVerifiedPublisher: true,
+  },
+};
+
 export function buildMockResponse(
   ownerOverride?: string,
   repoOverride?: string,
@@ -78,5 +126,6 @@ export function buildMockResponse(
     projectType,
     onboarding,
     treeTruncated: false,
+    release: MOCK_RELEASE,
   };
 }

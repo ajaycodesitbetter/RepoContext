@@ -169,3 +169,64 @@ export async function fetchOwnerProfile(login: string): Promise<GithubOwnerProfi
 export function hasGithubToken(): boolean {
   return !!process.env.GITHUB_TOKEN;
 }
+
+/* ========================= Releases ========================= */
+
+export type GithubReleaseAsset = {
+  name: string;
+  size: number;
+  download_count: number;
+  browser_download_url: string;
+  content_type: string;
+};
+
+export type GithubRelease = {
+  tag_name: string;
+  name: string | null;
+  published_at: string | null;
+  prerelease: boolean;
+  draft: boolean;
+  html_url: string;
+  assets: GithubReleaseAsset[];
+};
+
+/**
+ * Fetch releases for a repo, sorted by creation date (newest first).
+ * Returns up to 10 releases to find the latest stable one.
+ * Returns null (not throws) if the repo has no releases — this is
+ * a non-critical, best-effort enhancement.
+ */
+export async function fetchReleases(
+  owner: string,
+  repo: string,
+): Promise<GithubRelease[] | null> {
+  try {
+    return await gh<GithubRelease[]>(
+      `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/releases?per_page=10`,
+    );
+  } catch {
+    // Releases are best-effort. A 404 (no releases) or any other
+    // error should never fail the main brief.
+    return null;
+  }
+}
+
+/* ========================= Organization Verification ========================= */
+
+export type GithubOrg = {
+  login: string;
+  is_verified?: boolean;
+};
+
+/**
+ * Check if a GitHub organization is verified. Returns false for user accounts
+ * or if the API call fails — never throws.
+ */
+export async function fetchOrgVerification(login: string): Promise<boolean> {
+  try {
+    const org = await gh<GithubOrg>(`/orgs/${encodeURIComponent(login)}`);
+    return org.is_verified === true;
+  } catch {
+    return false;
+  }
+}

@@ -77,3 +77,49 @@ body {
   outline: 2px solid var(--color-ring);
   outline-offset: 2px;
 }
+
+/* ========================= Animations ========================= */
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-in-from-bottom-3 {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes asset-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-in {
+  animation: slide-in-from-bottom-3 500ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.fade-in {
+  animation-name: fade-in;
+}
+
+.slide-in-from-bottom-3 {
+  animation-name: slide-in-from-bottom-3;
+}
+
+/* Staggered asset card entrance — each card uses inline animationDelay */
+[aria-label="Install panel"] .group {
+  animation-name: asset-card-in;
+}

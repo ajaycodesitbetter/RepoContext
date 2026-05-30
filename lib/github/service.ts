@@ -9,6 +9,8 @@ import {
   fetchRepo,
   fetchTree,
   fetchOwnerProfile,
+  fetchReleases,
+  fetchOrgVerification,
   hasGithubToken,
   GithubError,
 } from "@/lib/github/client";
@@ -17,6 +19,7 @@ import { rankFiles, pickTopFiles } from "@/lib/github/rank-files";
 import { inferOwnerLocation } from "@/lib/github/infer-location";
 import { detectProjectType } from "@/lib/analysis/detect-project-type";
 import { buildOnboarding } from "@/lib/analysis/onboarding";
+import { processReleases } from "@/lib/analysis/releases";
 import type { BriefResponse } from "@/lib/types";
 
 export type ServiceResult =
@@ -42,12 +45,14 @@ export async function getBriefForUrl(input: string): Promise<ServiceResult> {
   try {
     const repo = await fetchRepo(parsed.owner, parsed.repo);
 
-    // Fetch tree (required) and owner profile (best-effort) in parallel.
-    // Owner profile failure must NEVER fail the whole brief — we degrade
-    // to "owner location unavailable" instead.
-    const [tree, ownerProfileResult] = await Promise.all([
+    // Fetch tree (required) and enhancements (best-effort) in parallel.
+    // Owner profile / releases / org verification failures must NEVER
+    // fail the whole brief — we degrade gracefully instead.
+    const [tree, ownerProfileResult, releasesResult, isVerifiedOrg] = await Promise.all([
       fetchTree(parsed.owner, parsed.repo, repo.default_branch),
       fetchOwnerProfile(repo.owner.login).catch(() => null),
+      fetchReleases(parsed.owner, parsed.repo),
+      fetchOrgVerification(repo.owner.login),
     ]);
 
     const inferred = inferOwnerLocation(ownerProfileResult?.location ?? null);
@@ -64,6 +69,7 @@ export async function getBriefForUrl(input: string): Promise<ServiceResult> {
     const topFiles = pickTopFiles(ranked, 12);
     const projectType = detectProjectType(ranked);
     const onboarding = buildOnboarding(ranked, topFiles, projectType);
+    const releaseInfo = await processReleases(releasesResult, isVerifiedOrg);
 
     return {
       ok: true,
@@ -88,6 +94,7 @@ export async function getBriefForUrl(input: string): Promise<ServiceResult> {
         projectType,
         onboarding,
         treeTruncated: tree.truncated === true,
+        release: releaseInfo,
       },
     };
   } catch (e) {

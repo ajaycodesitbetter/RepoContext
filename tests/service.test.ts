@@ -64,6 +64,20 @@ before(() => {
         headers: { "content-type": "application/json" },
       });
     }
+    // Releases endpoint — return empty array (no installable assets).
+    if (url.includes("/releases")) {
+      return new Response(JSON.stringify([]), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    }
+    // Org verification — return non-verified.
+    if (url.includes("/orgs/")) {
+      return new Response(JSON.stringify({ login: "facebook", is_verified: false }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    }
     if (url.includes("/repos/")) {
       return new Response(JSON.stringify(stubRepoBody()), {
         status: 200,
@@ -121,6 +135,12 @@ test("service maps absent truncated field → treeTruncated=false", async () => 
     }
     if (url.includes("/users/")) {
       return new Response(JSON.stringify(stubOwnerProfileBody()), { status: 200 });
+    }
+    if (url.includes("/releases")) {
+      return new Response(JSON.stringify([]), { status: 200 });
+    }
+    if (url.includes("/orgs/")) {
+      return new Response(JSON.stringify({ login: "facebook", is_verified: false }), { status: 200 });
     }
     return new Response(JSON.stringify(stubRepoBody()), { status: 200 });
   }) as typeof fetch;
@@ -236,6 +256,12 @@ test("service populates projectType + onboarding from the tree", async () => {
     if (url.includes("/users/")) {
       return new Response(JSON.stringify(stubOwnerProfileBody()), { status: 200 });
     }
+    if (url.includes("/releases")) {
+      return new Response(JSON.stringify([]), { status: 200 });
+    }
+    if (url.includes("/orgs/")) {
+      return new Response(JSON.stringify({ login: "facebook", is_verified: false }), { status: 200 });
+    }
     return new Response(JSON.stringify(stubRepoBody()), { status: 200 });
   }) as typeof fetch;
   try {
@@ -282,6 +308,12 @@ test("service degrades to projectType=null + minimal onboarding for unknown stac
     }
     if (url.includes("/users/")) {
       return new Response(JSON.stringify(stubOwnerProfileBody()), { status: 200 });
+    }
+    if (url.includes("/releases")) {
+      return new Response(JSON.stringify([]), { status: 200 });
+    }
+    if (url.includes("/orgs/")) {
+      return new Response(JSON.stringify({ login: "facebook", is_verified: false }), { status: 200 });
     }
     return new Response(JSON.stringify(stubRepoBody()), { status: 200 });
   }) as typeof fetch;

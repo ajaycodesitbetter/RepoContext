@@ -65,6 +65,36 @@ export type OnboardingBrief = {
   readingList: OnboardingItem[];
 };
 
+/** A single downloadable asset from a GitHub Release. */
+export type ReleaseAsset = {
+  name: string;
+  size: number;
+  downloadCount: number;
+  downloadUrl: string;
+  contentType: string;
+  /** Detected platform from filename heuristics (e.g. "Windows", "macOS", "Linux"). */
+  platform: string | null;
+};
+
+/** Trust signals associated with a release. */
+export type ReleaseTrustSignals = {
+  /** SHA-256 hash if a companion .sha256 asset exists in the release. */
+  sha256: Record<string, string>;
+  /** Whether the GitHub org that owns the repo is verified. */
+  isVerifiedPublisher: boolean;
+};
+
+/** Processed release data for the install panel. */
+export type ReleaseInfo = {
+  tagName: string;
+  name: string | null;
+  publishedAt: string | null;
+  isPrerelease: boolean;
+  htmlUrl: string;
+  assets: ReleaseAsset[];
+  trustSignals: ReleaseTrustSignals;
+};
+
 export type BriefResponse = {
   meta: RepoMeta;
   tree: TreeEntry[];
@@ -79,6 +109,8 @@ export type BriefResponse = {
    * user knows the file list isn't exhaustive.
    */
   treeTruncated: boolean;
+  /** Release info — only present when the latest stable release has installable assets. */
+  release: ReleaseInfo | null;
 };
 
 export type ApiError = {
