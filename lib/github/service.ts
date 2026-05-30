@@ -45,11 +45,14 @@ export async function getBriefForUrl(input: string): Promise<ServiceResult> {
   try {
     const repo = await fetchRepo(parsed.owner, parsed.repo);
 
+    // Use explicit branch from URL if provided, otherwise default.
+    const effectiveBranch = parsed.branch ?? repo.default_branch;
+
     // Fetch tree (required) and enhancements (best-effort) in parallel.
     // Owner profile / releases / org verification failures must NEVER
     // fail the whole brief — we degrade gracefully instead.
     const [tree, ownerProfileResult, releasesResult, isVerifiedOrg] = await Promise.all([
-      fetchTree(parsed.owner, parsed.repo, repo.default_branch),
+      fetchTree(parsed.owner, parsed.repo, effectiveBranch),
       fetchOwnerProfile(repo.owner.login).catch(() => null),
       fetchReleases(parsed.owner, parsed.repo),
       fetchOrgVerification(repo.owner.login),
@@ -57,13 +60,36 @@ export async function getBriefForUrl(input: string): Promise<ServiceResult> {
 
     const inferred = inferOwnerLocation(ownerProfileResult?.location ?? null);
 
-    const rawNodes = tree.tree
+    let rawNodes = tree.tree
       .filter((n) => n.type === "blob" || n.type === "tree")
       .map((n) => ({
         path: n.path,
         type: n.type as "blob" | "tree",
         size: typeof n.size === "number" ? n.size : null,
       }));
+
+    // If a subpath was requested, filter to only entries under that prefix
+    // and strip the prefix so paths are relative to the explored directory.
+    if (parsed.subpath) {
+      const prefix = parsed.subpath.endsWith("/")
+        ? parsed.subpath
+        : parsed.subpath + "/";
+      rawNodes = rawNodes
+        .filter((n) => n.path === parsed.subpath || n.path.startsWith(prefix))
+        .map((n) => ({
+          ...n,
+          path: n.path === parsed.subpath ? n.path : n.path.slice(prefix.length),
+        }))
+        .filter((n) => n.path.length > 0);
+
+      if (rawNodes.length === 0) {
+        return {
+          ok: false,
+          status: 404,
+          error: `Path '${parsed.subpath}' not found on branch '${effectiveBranch}'.`,
+        };
+      }
+    }
 
     const ranked = rankFiles(rawNodes);
     const topFiles = pickTopFiles(ranked, 12);
@@ -88,6 +114,8 @@ export async function getBriefForUrl(input: string): Promise<ServiceResult> {
           ownerCountry: inferred.ownerCountry,
           ownerCountryCode: inferred.ownerCountryCode,
           locationConfidence: inferred.locationConfidence,
+          ...(parsed.branch ? { exploredBranch: effectiveBranch } : {}),
+          ...(parsed.subpath ? { exploredSubpath: parsed.subpath } : {}),
         },
         tree: ranked,
         topFiles,

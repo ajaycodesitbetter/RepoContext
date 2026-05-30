@@ -15,6 +15,7 @@ import {
   Star,
   Loader2,
   RefreshCw,
+  FolderOpen,
 } from "lucide-react";
 import { RepoInput } from "@/components/repo-input";
 import { RepoMeta } from "@/components/repo-meta";
@@ -429,11 +430,28 @@ function SuccessMain({ data }: { data: BriefResponse }) {
       {data.meta.isMock && <MockNotice />}
       {data.treeTruncated && <TruncatedNotice />}
 
+      {/* Subpath breadcrumb — only shown when exploring a subdirectory */}
+      {data.meta.exploredSubpath && (
+        <div className="flex items-center gap-1.5 rounded-lg border border-primary/20 bg-primary/5 px-4 py-2 font-mono text-[11px] text-muted-foreground">
+          <FolderOpen aria-hidden="true" className="h-3.5 w-3.5 text-primary" />
+          <span className="text-foreground">{data.meta.owner}/{data.meta.repo}</span>
+          <span className="text-muted-foreground/40">→</span>
+          <span className="text-foreground">{data.meta.exploredBranch ?? data.meta.defaultBranch}</span>
+          <span className="text-muted-foreground/40">→</span>
+          <span className="text-primary">{data.meta.exploredSubpath}</span>
+        </div>
+      )}
+
       {/* Details row */}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-border bg-card/10 backdrop-blur-sm px-4 py-2.5 font-mono text-[11px] text-muted-foreground">
         <span>
           <span className="text-muted-foreground/60">branch:</span>{" "}
-          <span className="text-foreground">{data.meta.defaultBranch}</span>
+          <span className="text-foreground">{data.meta.exploredBranch ?? data.meta.defaultBranch}</span>
+          {data.meta.exploredBranch && data.meta.exploredBranch !== data.meta.defaultBranch && (
+            <span className="ml-1.5 rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] text-primary">
+              custom
+            </span>
+          )}
         </span>
         <span aria-hidden="true" className="text-muted-foreground/40">
           ·

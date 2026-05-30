@@ -62,24 +62,61 @@ test("strips .git suffix from shorthand", () => {
   });
 });
 
-test("handles /tree/<branch> URL", () => {
+test("handles /tree/<branch> URL — extracts branch", () => {
   assert.deepEqual(parseRepoUrl("https://github.com/facebook/react/tree/main"), {
     owner: "facebook",
     repo: "react",
+    branch: "main",
   });
 });
 
-test("handles /tree/<branch>/<sub> URL", () => {
+test("handles /tree/<branch>/<sub> URL — extracts branch + subpath", () => {
   assert.deepEqual(
     parseRepoUrl("https://github.com/facebook/react/tree/main/packages/react"),
-    { owner: "facebook", repo: "react" },
+    { owner: "facebook", repo: "react", branch: "main", subpath: "packages/react" },
   );
 });
 
-test("handles /blob/<branch>/<path> URL", () => {
+test("handles /blob/<branch>/<path> URL — extracts branch + subpath", () => {
   assert.deepEqual(
     parseRepoUrl("https://github.com/facebook/react/blob/main/README.md"),
-    { owner: "facebook", repo: "react" },
+    { owner: "facebook", repo: "react", branch: "main", subpath: "README.md" },
+  );
+});
+
+test("handles /tree/canary URL", () => {
+  assert.deepEqual(parseRepoUrl("https://github.com/vercel/next.js/tree/canary"), {
+    owner: "vercel",
+    repo: "next.js",
+    branch: "canary",
+  });
+});
+
+test("handles /tree/canary/packages/next URL", () => {
+  assert.deepEqual(
+    parseRepoUrl("https://github.com/vercel/next.js/tree/canary/packages/next"),
+    { owner: "vercel", repo: "next.js", branch: "canary", subpath: "packages/next" },
+  );
+});
+
+test("shorthand owner/repo@branch", () => {
+  assert.deepEqual(parseRepoUrl("owner/repo@develop"), {
+    owner: "owner",
+    repo: "repo",
+    branch: "develop",
+  });
+});
+
+test("shorthand owner/repo without branch has no branch field", () => {
+  const result = parseRepoUrl("facebook/react");
+  assert.strictEqual(result?.branch, undefined);
+  assert.strictEqual(result?.subpath, undefined);
+});
+
+test("shorthand with /tree/branch/subpath", () => {
+  assert.deepEqual(
+    parseRepoUrl("torvalds/linux/tree/master/kernel"),
+    { owner: "torvalds", repo: "linux", branch: "master", subpath: "kernel" },
   );
 });
 

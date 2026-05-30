@@ -26,6 +26,11 @@ export type RepoMeta = {
   ownerCountry: string | null;
   ownerCountryCode: string | null;
   locationConfidence: LocationConfidence;
+
+  /** The branch being explored (may differ from defaultBranch when a URL includes /tree/<branch>). */
+  exploredBranch?: string;
+  /** Subdirectory being explored (only set if a subpath was requested). */
+  exploredSubpath?: string;
 };
 
 export type TreeEntry = {

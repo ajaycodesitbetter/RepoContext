@@ -22,15 +22,11 @@ const INSTALLABLE_EXTENSIONS = new Set([
 ]);
 
 /**
- * Archive extensions — only counted as installable when they appear as
- * explicit release assets (GitHub's auto-generated source archives are
- * filtered out by checking the download URL pattern).
+ * NOTE: Archive extensions (.zip, .tar.gz, .tar.xz, .7z, etc.) are
+ * intentionally EXCLUDED — they are source archives, not installable
+ * binaries. Only the explicit INSTALLABLE_EXTENSIONS whitelist above
+ * qualifies an asset for the install panel.
  */
-const ARCHIVE_EXTENSIONS = new Set([
-  ".zip", ".tar.gz", ".tar.bz2", ".tar.xz", ".7z",
-]);
-
-const GITHUB_AUTO_ARCHIVE_PATTERN = /\/archive\/refs\/(tags|heads)\//;
 
 /* ========================= Platform Detection ========================= */
 
@@ -61,12 +57,9 @@ function getExtension(filename: string): string {
   return dot >= 0 ? lower.slice(dot) : "";
 }
 
-function isInstallableAsset(name: string, downloadUrl: string): boolean {
-  if (GITHUB_AUTO_ARCHIVE_PATTERN.test(downloadUrl)) return false;
+function isInstallableAsset(name: string, _downloadUrl: string): boolean {
   const ext = getExtension(name);
-  if (INSTALLABLE_EXTENSIONS.has(ext)) return true;
-  if (ARCHIVE_EXTENSIONS.has(ext)) return true;
-  return false;
+  return INSTALLABLE_EXTENSIONS.has(ext);
 }
 
 function isChecksumFile(name: string): boolean {

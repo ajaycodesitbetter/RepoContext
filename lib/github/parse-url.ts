@@ -1,22 +1,31 @@
 /**
- * Parse a user-supplied repo identifier into { owner, repo }.
+ * Parse a user-supplied repo identifier into { owner, repo, branch?, subpath? }.
  *
  * Accepts:
  *   - "owner/repo"
  *   - "owner/repo.git"
+ *   - "owner/repo@branch"
  *   - "github.com/owner/repo"
  *   - "https://github.com/owner/repo"            (also http://)
  *   - "https://www.github.com/owner/repo"        (case-insensitive host)
  *   - "https://github.com/owner/repo/"           (trailing slash)
  *   - "https://github.com/owner/repo.git"
- *   - "https://github.com/owner/repo/tree/<branch>/..."
+ *   - "https://github.com/owner/repo/tree/<branch>"
+ *   - "https://github.com/owner/repo/tree/<branch>/path/to/dir"
  *   - "https://github.com/owner/repo/blob/<branch>/<path>"
  *   - URLs with ?query and/or #fragment on any of the above
  *
  * Returns null on invalid input.
  */
 
-export type ParsedRepo = { owner: string; repo: string };
+export type ParsedRepo = {
+  owner: string;
+  repo: string;
+  /** Explicit branch from the URL (undefined = use default branch). */
+  branch?: string;
+  /** Subdirectory path within the repo (undefined = repo root). */
+  subpath?: string;
+};
 
 const OWNER_RE = /^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,38})$/;
 const REPO_RE = /^[a-zA-Z0-9._-]{1,100}$/;
@@ -58,6 +67,8 @@ export function parseRepoUrl(input: string): ParsedRepo | null {
 
   let owner: string | undefined;
   let repo: string | undefined;
+  let branch: string | undefined;
+  let subpath: string | undefined;
 
   // Detect a github.com URL case-insensitively, with or without protocol or www.
   const looksLikeUrl = /github\.com/i.test(withoutQuery);
@@ -73,12 +84,36 @@ export function parseRepoUrl(input: string): ParsedRepo | null {
     }
     owner = parts[1];
     repo = parts[2];
+
+    // Extract branch and subpath from /tree/<branch>/... or /blob/<branch>/...
+    if (parts.length >= 5 && (parts[3] === "tree" || parts[3] === "blob")) {
+      branch = parts[4];
+      if (parts.length > 5) {
+        subpath = parts.slice(5).join("/");
+      }
+    }
   } else {
-    // owner/repo shorthand
-    const parts = withoutQuery.split("/").filter(Boolean);
+    // Shorthand parsing
+    // Check for owner/repo@branch syntax first
+    const atIdx = withoutQuery.indexOf("@");
+    let toParse = withoutQuery;
+    if (atIdx > 0) {
+      branch = withoutQuery.slice(atIdx + 1);
+      toParse = withoutQuery.slice(0, atIdx);
+    }
+
+    const parts = toParse.split("/").filter(Boolean);
     if (parts.length < 2) return null;
     owner = parts[0];
     repo = parts[1];
+
+    // If no @ branch but has /tree/<branch>/... in shorthand
+    if (!branch && parts.length >= 4 && parts[2] === "tree") {
+      branch = parts[3];
+      if (parts.length > 4) {
+        subpath = parts.slice(4).join("/");
+      }
+    }
   }
 
   if (!owner || !repo) return null;
@@ -90,5 +125,8 @@ export function parseRepoUrl(input: string): ParsedRepo | null {
   if (!OWNER_RE.test(owner)) return null;
   if (!REPO_RE.test(repo)) return null;
 
-  return { owner, repo };
+  const result: ParsedRepo = { owner, repo };
+  if (branch) result.branch = branch;
+  if (subpath) result.subpath = subpath;
+  return result;
 }
