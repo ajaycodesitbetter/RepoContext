@@ -83,7 +83,16 @@ export async function GET(
       );
     }
 
-    const rawBuffer = Buffer.from(data.content, "base64");
+    let rawBuffer: Buffer;
+    if (data.content) {
+      rawBuffer = Buffer.from(data.content, "base64");
+    } else if (data.download_url) {
+      const rawRes = await fetch(data.download_url, { headers: authHeaders() });
+      if (!rawRes.ok) throw new Error("Failed to fetch large file content");
+      rawBuffer = Buffer.from(await rawRes.arrayBuffer());
+    } else {
+      throw new Error("No content available for file");
+    }
 
     if (searchParams.get("download") === "true") {
       const filename = path.split("/").pop() ?? "file";
