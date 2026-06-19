@@ -163,7 +163,7 @@ function Row({
           onChange={handleCheckbox}
           onClick={(e) => e.stopPropagation()}
           aria-label={`Select ${node.name}`}
-          className="h-3.5 w-3.5 shrink-0 cursor-pointer rounded border-muted-foreground/40 accent-primary opacity-0 transition-opacity group-hover:opacity-100 sm:has-[:checked]:opacity-100"
+          className="h-3.5 w-3.5 shrink-0 cursor-pointer rounded border-muted-foreground/40 accent-primary opacity-60 transition-opacity group-hover:opacity-100 md:opacity-0 md:group-hover:opacity-100 sm:has-[:checked]:opacity-100"
           style={isChecked || isIndeterminate ? { opacity: 1 } : undefined}
         />
 
@@ -225,7 +225,7 @@ function Row({
             onClick={handlePreviewClick}
             title="Preview file (p)"
             aria-label={`Preview ${node.name}`}
-            className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded text-muted-foreground/60 opacity-0 transition-all hover:bg-muted hover:text-foreground group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded text-muted-foreground/60 opacity-70 transition-all hover:bg-muted hover:text-foreground group-hover:opacity-100 md:opacity-0 md:group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <Eye className="h-3 w-3" />
           </button>
@@ -239,7 +239,7 @@ function Row({
             title="Download file"
             aria-label={`Download ${node.name}`}
             onClick={(e) => e.stopPropagation()}
-            className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded text-muted-foreground/60 opacity-0 transition-all hover:bg-muted hover:text-foreground group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded text-muted-foreground/60 opacity-70 transition-all hover:bg-muted hover:text-foreground group-hover:opacity-100 md:opacity-0 md:group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <Download className="h-3 w-3" />
           </a>

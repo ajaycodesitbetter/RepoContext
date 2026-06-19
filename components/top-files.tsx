@@ -108,7 +108,7 @@ export function TopFiles({
                     }}
                     title="Preview file"
                     aria-label={`Preview ${filename}`}
-                    className="inline-flex h-6 w-6 items-center justify-center rounded text-muted-foreground/60 opacity-0 transition-all hover:bg-muted hover:text-foreground group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="inline-flex h-6 w-6 items-center justify-center rounded text-muted-foreground/60 opacity-70 transition-all hover:bg-muted hover:text-foreground group-hover:opacity-100 md:opacity-0 md:group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     <Eye className="h-3.5 w-3.5" />
                   </button>
@@ -120,7 +120,7 @@ export function TopFiles({
                   title="Download file"
                   aria-label={`Download ${filename}`}
                   onClick={(e) => e.stopPropagation()}
-                  className="inline-flex h-6 w-6 items-center justify-center rounded text-muted-foreground/60 opacity-0 transition-all hover:bg-muted hover:text-foreground group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="inline-flex h-6 w-6 items-center justify-center rounded text-muted-foreground/60 opacity-70 transition-all hover:bg-muted hover:text-foreground group-hover:opacity-100 md:opacity-0 md:group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <Download className="h-3.5 w-3.5" />
                 </a>

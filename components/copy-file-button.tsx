@@ -142,7 +142,7 @@ export function CopyFileButton({
       disabled={status === "loading"}
       title="Copy file as LLM prompt"
       aria-label={`Copy ${filePath} as LLM prompt`}
-      className="inline-flex items-center gap-1 rounded-md border border-border bg-background/80 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-muted-foreground opacity-0 transition-all hover:bg-muted/60 hover:text-foreground group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-50"
+      className="inline-flex items-center gap-1 rounded-md border border-border bg-background/80 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-muted-foreground opacity-70 transition-all hover:bg-muted/60 hover:text-foreground group-hover:opacity-100 md:opacity-0 md:group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-50"
     >
       <Icon
         aria-hidden="true"
