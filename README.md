@@ -1,128 +1,115 @@
-# RepoLens
+# RepoContext
 
-A fast, opinionated brief for any public GitHub repository.
+> Read any GitHub repo, in seconds
 
-RepoLens turns a GitHub URL into a readable first-pass: project type, repository metadata, the files most worth reading first, and a globe view of the inferred owner country. It is built for engineers who evaluate open-source projects often and refuse to spend twenty minutes guessing where to start.
+[![Live Website](https://img.shields.io/badge/Live-repocontext.ajaymathuriya.com-blue?style=for-the-badge)](https://repocontext.ajaymathuriya.com)
+[![Next.js](https://img.shields.io/badge/Next.js_14-black?style=for-the-badge&logo=next.js&logoColor=white)](#)
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](#)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_v4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](#)
+[![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)](#)
 
-## Why RepoLens
+## What is RepoContext?
 
-Most repositories punish curiosity. The README is half-finished, the file tree is two hundred entries deep, and nothing tells you which three files actually matter. You end up clicking around for ten minutes just to decide whether the project is worth a serious look.
+RepoContext is a blazing-fast, fully deterministic web application designed to instantly parse and present the structure, health, and context of any GitHub repository. It requires no signups and uses absolutely no AI, giving developers an instant, objective heuristic-based onboarding brief for any codebase.
 
-RepoLens fixes the first ten minutes. Paste a URL, get a structured brief, and start reading the right files first.
+## Features
 
-No accounts. No agents. No language-model calls. Every signal is heuristic and computed server-side.
+- **Public Repo Brief** — Paste any GitHub URL or owner/repo, get an instant structured brief: project type, metadata, health signals, dependency risk, open issues/PRs.
+- **Onboarding Brief** — Start reading order, top files most worth reading first, heuristic-based (no AI).
+- **Full File Tree** — Browse the complete repo tree with directory expansion and support for 28k+ entries.
+- **File Preview** — Inline 16KB preview of any file. Press `ESC` or click ✕ to close. Truncated files show a "Showing first 16KB" notice.
+- **Single File Download** — Download any file directly in its original format with one click, no ZIP required.
+- **Bulk File Download** — Checkbox multi-select on file rows with a "Download Selected (N)" floating toolbar that downloads all selected files as a single ZIP archive.
+- **Copy as Markdown** — Copy the entire repo brief as a Markdown document.
+- **Export for LLM** — Export structured context explicitly optimized for LLMs like Claude, Cursor, ChatGPT, Gemini CLI, and OpenClaw.
+- **Quick Download** — One-click brief download.
+- **Private Repo Access** — Native support for private repositories using a GitHub Personal Access Token (PAT).
+- **Repository Health Layer** — Insights into activity status, review pressure, community breadth, and open issues/PRs preview.
+- **GitHub API Counter** — Live remaining rate limit display to manage API requests.
 
-## Current Features
+## Use Cases
 
-- Public repository briefs from a GitHub URL or `owner/repo`
-- Repository metadata: stars, forks, primary language, default branch, description
-- Project-type and framework detection driven by file-tree heuristics
-- Ranked "start reading here" list that surfaces the most useful files first
-- Compact file tree with sensible depth limits
-- Owner country inference from public GitHub profile location, with explicit confidence levels
-- Interactive globe that highlights the inferred country only when confidence is high or medium
-- One-click copy of the full brief as Markdown
-- Server-side GitHub API access; tokens never reach the client
-- Graceful mock fallback when no GitHub token is configured
-
-## Planned Features
-
-- Selective file download and lightweight in-app file access
-- Per-file summaries and contributor signals
-- Saved briefs and shareable permalinks
-- CLI for use in terminals and CI pipelines
-
-## How It Works
-
-1. You paste a public GitHub repository URL or `owner/repo` reference.
-2. The server fetches repository metadata and the file tree from the GitHub REST API.
-3. Heuristics infer project type, the most useful entry-point files, and the owner country with a confidence score.
-4. The UI renders a clean brief, a navigable file tree, and a globe pinned to the inferred country when the signal is strong enough to trust.
-
-Country inference is intentionally conservative. If the owner location is empty, vague, or non-geographic, RepoLens marks it as unmapped instead of guessing. The globe never claims a repository is from a country.
-
-## Tech Stack
-
-- Next.js 15 with the App Router
-- React 19
-- TypeScript
-- Tailwind CSS v4
-- d3-geo for globe rendering
-- GitHub REST API
-- pnpm
+- **Developers** evaluating open-source projects before integrating or contributing.
+- **Engineers** preparing comprehensive codebase context to feed into LLMs.
+- **Students** exploring unfamiliar repositories and learning repository structures.
+- **Teams** rapidly onboarding new members to existing codebases.
 
 ## Getting Started
 
 ### Prerequisites
-
-- Node.js 20 or newer
-- pnpm
-- A GitHub personal access token, recommended for real usage
+- **Node.js**: v18+
+- **Package Manager**: pnpm
+- **GitHub PAT**: A Personal Access Token for GitHub API access.
 
 ### Installation
 
-```bash
-pnpm install
-```
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/ajaycodesitbetter/RepoContext.git
+   cd RepoContext
+   ```
 
-### Development
+2. **Install dependencies:**
+   ```bash
+   pnpm install
+   ```
 
-```bash
-pnpm dev
-```
+3. **Environment Setup:**
+   Create a `.env.local` file in the root directory and add your GitHub token:
+   ```env
+   GITHUB_TOKEN=your_personal_access_token_here
+   ```
 
-### Typecheck
+4. **Start the Development Server:**
+   ```bash
+   pnpm dev
+   ```
+   Open `http://localhost:3000` with your browser to see the result.
 
-```bash
-pnpm run typecheck
-```
+## API Reference
 
-### Tests
+RepoContext provides internal API routes used by the frontend to fetch repository data.
 
-```bash
-pnpm test
-```
+### `GET /api/brief`
+Generates a structured brief for a given repository.
 
-### Production build
+- **Parameters:**
+  - `owner` (string): Repository owner.
+  - `repo` (string): Repository name.
+- **Response:** JSON object containing metadata, health signals, dependencies, and file tree.
+- **Example cURL:**
+  ```bash
+  curl "http://localhost:3000/api/brief?owner=ajaycodesitbetter&repo=RepoContext"
+  ```
 
-```bash
-pnpm run build
-pnpm run start
-```
+### `GET /api/file`
+Fetches file contents or triggers a direct download.
 
-## Environment Variables
+- **Parameters:**
+  - `owner` (string): Repository owner.
+  - `repo` (string): Repository name.
+  - `path` (string): File path in the repository.
+  - `branch` (string): Target branch.
+  - `download` (boolean, optional): If `true`, sets `Content-Disposition` to `attachment`.
+- **Response:** JSON object containing base64 encoded content (for previews) or raw file bytes (for downloads).
+- **Example cURL:**
+  ```bash
+  curl "http://localhost:3000/api/file?owner=ajaycodesitbetter&repo=RepoContext&path=package.json&branch=main"
+  ```
 
-Set the following in your environment or a local `.env.local` file:
+## Tech Stack
 
-```bash
-GITHUB_TOKEN=your_github_token_here
-```
+| Category         | Technology                 |
+|------------------|----------------------------|
+| **Framework**    | Next.js 14 (App Router)    |
+| **Language**     | TypeScript                 |
+| **Styling**      | Tailwind CSS v4            |
+| **Hosting**      | Vercel                     |
 
-Notes:
+## Contributing
 
-- `GITHUB_TOKEN` is strongly recommended for production. It raises the GitHub API rate limit and is required to reliably analyze larger repositories.
-- Without a token, the app may fall back to mock data depending on runtime configuration.
-- The token is read server-side only and is never sent to the browser.
-
-## Deployment
-
-RepoLens requires a server runtime because it exposes a dynamic API route for repository analysis. It is not suitable for static-only hosts such as GitHub Pages.
-
-Any host that can run a Next.js server and inject environment variables will work. Common targets include Netlify, Vercel, Render, Fly.io, and self-hosted Node.js behind a reverse proxy.
-
-Generic build and run commands:
-
-```bash
-pnpm run build
-pnpm run start
-```
-
-Make sure `GITHUB_TOKEN` is set as an environment variable on the host.
-
-## Status
-
-Active development. The core brief, file-ranking, metadata pipeline, country inference, and globe view are implemented and covered by tests. Selective file download and per-file summaries are on the roadmap.
+Contributions are welcome! Please open an issue or submit a pull request for any improvements or bug fixes. Ensure that your code passes all linting and typing checks before submitting.
 
 ## License
 
-Released under the MIT License.
+This project is licensed under the MIT License.
