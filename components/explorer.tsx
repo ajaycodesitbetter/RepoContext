@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { RepoInput } from "@/components/repo-input";
 import { RepoMeta } from "@/components/repo-meta";
-import { FileTree } from "@/components/file-tree";
+import { FileTree, DownloadToolbar } from "@/components/file-tree";
 import { TopFiles } from "@/components/top-files";
 import { OnboardingBriefCard } from "@/components/onboarding-brief";
 import { InstallPanel } from "@/components/install-panel";
@@ -29,6 +29,7 @@ import { BackgroundGlobe } from "@/components/background-globe";
 import { RecentSearches, useRecentSearches } from "@/components/recent-searches";
 import { RepositoryHealthPanel } from "@/components/repository-health";
 import { DependencyRiskPanel } from "@/components/dependency-risk-panel";
+import { FilePreviewDialog, useFilePreview } from "@/components/file-preview-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { BriefResponse, ApiError } from "@/lib/types";
@@ -473,6 +474,93 @@ function SuccessMain({ data }: { data: BriefResponse }) {
   const dirCount = data.tree.filter((e) => e.type === "tree").length;
   const totalEntries = data.tree.length;
 
+  const branch = data.meta.exploredBranch ?? data.meta.defaultBranch;
+  const repoSlug = `${data.meta.owner}/${data.meta.repo}`;
+
+  // ── File selection state ──
+  const [selectedPaths, setSelectedPaths] = React.useState<Set<string>>(new Set());
+  const [downloadLoading, setDownloadLoading] = React.useState(false);
+  const [downloadError, setDownloadError] = React.useState<string | null>(null);
+
+  const handleToggleSelect = React.useCallback(
+    (path: string, isDir: boolean, blobPaths?: string[]) => {
+      setSelectedPaths((prev) => {
+        const next = new Set(prev);
+        if (isDir && blobPaths) {
+          const allSelected = blobPaths.every((p) => next.has(p));
+          if (allSelected) {
+            for (const p of blobPaths) next.delete(p);
+          } else {
+            for (const p of blobPaths) next.add(p);
+          }
+        } else {
+          if (next.has(path)) next.delete(path);
+          else next.add(path);
+        }
+        return next;
+      });
+    },
+    [],
+  );
+
+  const handleClearSelection = React.useCallback(() => {
+    setSelectedPaths(new Set());
+  }, []);
+
+  const handleDownload = React.useCallback(async () => {
+    if (selectedPaths.size === 0) return;
+    setDownloadLoading(true);
+    setDownloadError(null);
+
+    try {
+      const res = await fetch("/api/download", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          repo: repoSlug,
+          paths: [...selectedPaths],
+          ref: branch,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = (await res.json().catch(() => null)) as { error?: string } | null;
+        setDownloadError(err?.error ?? "Download failed");
+        return;
+      }
+
+      // Check for partial failures.
+      const skippedHeader = res.headers.get("X-Skipped-Paths");
+      if (skippedHeader) {
+        try {
+          const skipped = JSON.parse(skippedHeader) as string[];
+          if (skipped.length > 0) {
+            setDownloadError(
+              `${skipped.length} file(s) could not be included in the ZIP`,
+            );
+          }
+        } catch {
+          // ignore header parse errors
+        }
+      }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${data.meta.repo}-files.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      setDownloadError("Network error — could not complete download.");
+    } finally {
+      setDownloadLoading(false);
+    }
+  }, [selectedPaths, repoSlug, branch, data.meta.repo]);
+
+  // ── File preview ──
+  const { previewState, openPreview, closePreview } = useFilePreview(repoSlug, branch);
+
   return (
     <>
       {data.meta.isMock && <MockNotice />}
@@ -484,7 +572,7 @@ function SuccessMain({ data }: { data: BriefResponse }) {
           <FolderOpen aria-hidden="true" className="h-3.5 w-3.5 text-primary" />
           <span className="text-foreground">{data.meta.owner}/{data.meta.repo}</span>
           <span className="text-muted-foreground/40">→</span>
-          <span className="text-foreground">{data.meta.exploredBranch ?? data.meta.defaultBranch}</span>
+          <span className="text-foreground">{branch}</span>
           <span className="text-muted-foreground/40">→</span>
           <span className="text-primary">{data.meta.exploredSubpath}</span>
         </div>
@@ -494,7 +582,7 @@ function SuccessMain({ data }: { data: BriefResponse }) {
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-border bg-card/10 backdrop-blur-sm px-4 py-2.5 font-mono text-[11px] text-muted-foreground">
         <span>
           <span className="text-muted-foreground/60">branch:</span>{" "}
-          <span className="text-foreground">{data.meta.exploredBranch ?? data.meta.defaultBranch}</span>
+          <span className="text-foreground">{branch}</span>
           {data.meta.exploredBranch && data.meta.exploredBranch !== data.meta.defaultBranch && (
             <span className="ml-1.5 rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] text-primary">
               custom
@@ -560,7 +648,7 @@ function SuccessMain({ data }: { data: BriefResponse }) {
           topFiles={data.topFiles}
           owner={data.meta.owner}
           repo={data.meta.repo}
-          branch={data.meta.exploredBranch ?? data.meta.defaultBranch}
+          branch={branch}
         />
         {(data.release || data.prerelease) && (
           <InstallPanel
@@ -583,6 +671,30 @@ function SuccessMain({ data }: { data: BriefResponse }) {
             risk={data.dependencyRiskSummary}
           />
         )}
+
+        {/* Download toolbar — visible when files selected */}
+        <DownloadToolbar
+          selectedCount={selectedPaths.size}
+          loading={downloadLoading}
+          onDownload={handleDownload}
+          onClearSelection={handleClearSelection}
+        />
+
+        {/* Download error toast */}
+        {downloadError && (
+          <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-800 dark:border-amber-800/40 dark:bg-amber-950/30 dark:text-amber-300">
+            <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+            <span className="flex-1">{downloadError}</span>
+            <button
+              type="button"
+              onClick={() => setDownloadError(null)}
+              className="shrink-0 font-mono text-[10px] text-amber-600 hover:text-amber-900 dark:text-amber-400 dark:hover:text-amber-200"
+            >
+              dismiss
+            </button>
+          </div>
+        )}
+
         <Tabs defaultValue="top">
           <TabsList className="grid h-9 max-w-xs grid-cols-2">
             <TabsTrigger value="top" className="gap-1.5 text-xs">
@@ -606,7 +718,8 @@ function SuccessMain({ data }: { data: BriefResponse }) {
               files={data.topFiles}
               owner={data.meta.owner}
               repo={data.meta.repo}
-              branch={data.meta.exploredBranch ?? data.meta.defaultBranch}
+              branch={branch}
+              onPreview={openPreview}
             />
           </TabsContent>
 
@@ -621,13 +734,24 @@ function SuccessMain({ data }: { data: BriefResponse }) {
                 </span>
               </div>
               <div className="max-h-[70vh] overflow-auto">
-                <FileTree entries={data.tree} topFiles={data.topFiles} />
+                <FileTree
+                  entries={data.tree}
+                  topFiles={data.topFiles}
+                  selectedPaths={selectedPaths}
+                  repoSlug={repoSlug}
+                  branch={branch}
+                  onToggleSelect={handleToggleSelect}
+                  onPreview={openPreview}
+                />
               </div>
             </div>
           </TabsContent>
         </Tabs>
         </>
       )}
+
+      {/* File preview dialog */}
+      <FilePreviewDialog state={previewState} onClose={closePreview} />
     </>
   );
 }

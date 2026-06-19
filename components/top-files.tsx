@@ -1,4 +1,4 @@
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Eye, Download } from "lucide-react";
 import { getFileIconInfo } from "@/lib/file-icons";
 import { getFileReason } from "@/lib/file-reasons";
 import { CopyFileButton } from "@/components/copy-file-button";
@@ -10,11 +10,13 @@ export function TopFiles({
   owner,
   repo,
   branch,
+  onPreview,
 }: {
   files: TreeEntry[];
   owner: string;
   repo: string;
   branch: string;
+  onPreview?: (path: string) => void;
 }) {
   if (files.length === 0) {
     return (
@@ -93,8 +95,35 @@ export function TopFiles({
                 )}
               </div>
 
-              {/* Score + copy + open arrow */}
+              {/* Score + preview + copy + open arrow */}
               <div className="flex shrink-0 items-center gap-2">
+                {/* Preview button */}
+                {onPreview && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onPreview(file.path);
+                    }}
+                    title="Preview file"
+                    aria-label={`Preview ${filename}`}
+                    className="inline-flex h-6 w-6 items-center justify-center rounded text-muted-foreground/60 opacity-0 transition-all hover:bg-muted hover:text-foreground group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <Eye className="h-3.5 w-3.5" />
+                  </button>
+                )}
+                {/* Direct Download button */}
+                <a
+                  href={`/api/file?repo=${encodeURIComponent(`${owner}/${repo}`)}&path=${encodeURIComponent(file.path)}&ref=${encodeURIComponent(branch)}&download=true`}
+                  download={filename}
+                  title="Download file"
+                  aria-label={`Download ${filename}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="inline-flex h-6 w-6 items-center justify-center rounded text-muted-foreground/60 opacity-0 transition-all hover:bg-muted hover:text-foreground group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                </a>
                 <CopyFileButton
                   owner={owner}
                   repo={repo}

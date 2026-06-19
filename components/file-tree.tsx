@@ -6,6 +6,9 @@ import {
   ChevronDown,
   Folder,
   FolderOpen,
+  Eye,
+  Download,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getFileIconInfo } from "@/lib/file-icons";
@@ -60,20 +63,71 @@ function formatSize(bytes: number | null): string {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
+/** Collect all blob paths from a node subtree. */
+function collectBlobPaths(node: Node): string[] {
+  if (node.type === "blob") return [node.path];
+  return node.children.flatMap(collectBlobPaths);
+}
+
 function Row({
   node,
   depth,
   importantSet,
+  selectedPaths,
+  repoSlug,
+  branch,
+  onToggleSelect,
+  onPreview,
 }: {
   node: Node;
   depth: number;
   importantSet: Set<string>;
+  selectedPaths: Set<string>;
+  repoSlug: string;
+  branch: string;
+  onToggleSelect: (path: string, isDir: boolean, blobPaths?: string[]) => void;
+  onPreview: (path: string) => void;
 }) {
   const [open, setOpen] = React.useState(depth < 2);
   const isDir = node.type === "tree";
   const isImportant = importantSet.has(node.path);
   const fileIcon = !isDir ? getFileIconInfo(node.path) : null;
   const FileIcon = fileIcon?.Icon;
+
+  const isChecked = isDir
+    ? (() => {
+        const blobs = collectBlobPaths(node);
+        return blobs.length > 0 && blobs.every((p) => selectedPaths.has(p));
+      })()
+    : selectedPaths.has(node.path);
+
+  const isIndeterminate = isDir && !isChecked && (() => {
+    const blobs = collectBlobPaths(node);
+    return blobs.some((p) => selectedPaths.has(p));
+  })();
+
+  const checkboxRef = React.useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => {
+    if (checkboxRef.current) {
+      checkboxRef.current.indeterminate = !!isIndeterminate;
+    }
+  }, [isIndeterminate]);
+
+  const handleCheckbox = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation();
+    if (isDir) {
+      const blobs = collectBlobPaths(node);
+      onToggleSelect(node.path, true, blobs);
+    } else {
+      onToggleSelect(node.path, false);
+    }
+  };
+
+  const handlePreviewClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onPreview(node.path);
+  };
 
   return (
     <li>
@@ -82,6 +136,7 @@ function Row({
           "group flex items-center gap-1.5 rounded-md py-0.5 pr-2 text-sm transition-colors",
           isDir ? "cursor-pointer hover:bg-muted/60" : "hover:bg-muted/40",
           isImportant && !isDir && "bg-amber-50/40 dark:bg-amber-950/10",
+          !isDir && isChecked && "bg-primary/5",
         )}
         style={{ paddingLeft: `${8 + depth * 14}px` }}
         onClick={() => isDir && setOpen((v) => !v)}
@@ -93,8 +148,25 @@ function Row({
             e.preventDefault();
             setOpen((v) => !v);
           }
+          // 'p' key opens preview for files
+          if (!isDir && e.key === "p") {
+            e.preventDefault();
+            onPreview(node.path);
+          }
         }}
       >
+        {/* Checkbox */}
+        <input
+          ref={checkboxRef}
+          type="checkbox"
+          checked={isChecked}
+          onChange={handleCheckbox}
+          onClick={(e) => e.stopPropagation()}
+          aria-label={`Select ${node.name}`}
+          className="h-3.5 w-3.5 shrink-0 cursor-pointer rounded border-muted-foreground/40 accent-primary opacity-0 transition-opacity group-hover:opacity-100 sm:has-[:checked]:opacity-100"
+          style={isChecked || isIndeterminate ? { opacity: 1 } : undefined}
+        />
+
         <span
           aria-hidden="true"
           className="inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center text-muted-foreground"
@@ -146,6 +218,33 @@ function Row({
           </span>
         )}
 
+        {/* Preview button — files only */}
+        {!isDir && (
+          <button
+            type="button"
+            onClick={handlePreviewClick}
+            title="Preview file (p)"
+            aria-label={`Preview ${node.name}`}
+            className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded text-muted-foreground/60 opacity-0 transition-all hover:bg-muted hover:text-foreground group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <Eye className="h-3 w-3" />
+          </button>
+        )}
+
+        {/* Direct Download button — files only */}
+        {!isDir && (
+          <a
+            href={`/api/file?repo=${encodeURIComponent(repoSlug)}&path=${encodeURIComponent(node.path)}&ref=${encodeURIComponent(branch)}&download=true`}
+            download={node.name}
+            title="Download file"
+            aria-label={`Download ${node.name}`}
+            onClick={(e) => e.stopPropagation()}
+            className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded text-muted-foreground/60 opacity-0 transition-all hover:bg-muted hover:text-foreground group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <Download className="h-3 w-3" />
+          </a>
+        )}
+
         {!isDir && node.size != null && (
           <span className="hidden shrink-0 font-mono text-[10px] tabular-nums text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 sm:inline">
             {formatSize(node.size)}
@@ -161,6 +260,11 @@ function Row({
               node={c}
               depth={depth + 1}
               importantSet={importantSet}
+              selectedPaths={selectedPaths}
+              repoSlug={repoSlug}
+              branch={branch}
+              onToggleSelect={onToggleSelect}
+              onPreview={onPreview}
             />
           ))}
         </ul>
@@ -172,9 +276,19 @@ function Row({
 export function FileTree({
   entries,
   topFiles,
+  selectedPaths,
+  repoSlug,
+  branch,
+  onToggleSelect,
+  onPreview,
 }: {
   entries: TreeEntry[];
   topFiles: TreeEntry[];
+  selectedPaths: Set<string>;
+  repoSlug: string;
+  branch: string;
+  onToggleSelect: (path: string, isDir: boolean, blobPaths?: string[]) => void;
+  onPreview: (path: string) => void;
 }) {
   const tree = React.useMemo(() => buildNodes(entries), [entries]);
   const importantSet = React.useMemo(
@@ -193,8 +307,68 @@ export function FileTree({
   return (
     <ul className="py-1">
       {tree.map((n) => (
-        <Row key={n.path} node={n} depth={0} importantSet={importantSet} />
+        <Row
+          key={n.path}
+          node={n}
+          depth={0}
+          importantSet={importantSet}
+          selectedPaths={selectedPaths}
+          repoSlug={repoSlug}
+          branch={branch}
+          onToggleSelect={onToggleSelect}
+          onPreview={onPreview}
+        />
       ))}
     </ul>
+  );
+}
+
+/* ====================== Download Selected Toolbar ====================== */
+
+export function DownloadToolbar({
+  selectedCount,
+  loading,
+  onDownload,
+  onClearSelection,
+}: {
+  selectedCount: number;
+  loading: boolean;
+  onDownload: () => void;
+  onClearSelection: () => void;
+}) {
+  if (selectedCount === 0) return null;
+
+  return (
+    <div className="flex items-center gap-3 rounded-lg border border-primary/20 bg-primary/5 px-4 py-2.5">
+      <span className="font-mono text-xs text-foreground">
+        <span className="font-semibold tabular-nums">{selectedCount}</span> file
+        {selectedCount !== 1 ? "s" : ""} selected
+      </span>
+      <div className="flex-1" />
+      <button
+        type="button"
+        onClick={onClearSelection}
+        className="font-mono text-[11px] text-muted-foreground transition-colors hover:text-foreground"
+      >
+        clear
+      </button>
+      <button
+        type="button"
+        onClick={onDownload}
+        disabled={loading}
+        className={cn(
+          "inline-flex items-center gap-1.5 rounded-md border border-primary/30 bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors",
+          "hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          "disabled:pointer-events-none disabled:opacity-50",
+        )}
+      >
+        {loading ? (
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        ) : (
+          <Download className="h-3.5 w-3.5" />
+        )}
+        Download Selected ({selectedCount})
+      </button>
+    </div>
   );
 }

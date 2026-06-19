@@ -218,3 +218,21 @@ export type ApiError = {
 /** Status codes the route handler may return. */
 export type ApiStatus = 200 | 400 | 401 | 403 | 404 | 429 | 502;
 
+/* ========================= File Preview & Download ========================= */
+
+/** Returned by GET /api/file — inline file preview. */
+export type FilePreviewResponse = {
+  content: string;
+  truncated: boolean;
+  size: number;
+  path: string;
+  ref: string;
+};
+
+/** Request body for POST /api/download — bulk ZIP download. */
+export type DownloadRequest = {
+  repo: string;
+  paths: string[];
+  ref?: string;
+};
+
