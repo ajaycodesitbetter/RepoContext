@@ -92,13 +92,15 @@ export function RepoMeta({ meta }: { meta: RepoMetaType }) {
           href={repoUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="group inline-flex items-baseline gap-1 font-mono text-base font-semibold leading-tight text-foreground hover:text-primary"
+          className="group flex items-center gap-1 font-mono text-base font-semibold leading-tight text-foreground hover:text-primary min-w-0"
         >
-          <span className="text-muted-foreground">{meta.owner}/</span>
-          <span>{meta.repo}</span>
+          <span className="truncate min-w-0" title={`${meta.owner}/${meta.repo}`}>
+            <span className="text-muted-foreground">{meta.owner}/</span>
+            <span>{meta.repo}</span>
+          </span>
           <ExternalLink
             aria-hidden="true"
-            className="h-3 w-3 self-center text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
+            className="h-3 w-3 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
           />
         </a>
         {meta.description && (

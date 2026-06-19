@@ -32,6 +32,7 @@ import { DependencyRiskPanel } from "@/components/dependency-risk-panel";
 import { FilePreviewDialog, useFilePreview } from "@/components/file-preview-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { StructuredData } from "@/components/structured-data";
 import type { BriefResponse, ApiError } from "@/lib/types";
 
 const EXAMPLES = [
@@ -164,14 +165,17 @@ export function Explorer() {
 
       <main className="mx-auto max-w-6xl px-5 py-6">
         {state.kind === "idle" ? (
-          <Hero
-            input={input}
-            setInput={setInput}
-            onSubmit={() => runQuery(input)}
-            onExample={handleExample}
-            recents={recents}
-            onRemoveRecent={removeRecent}
-          />
+          <>
+            <Hero
+              input={input}
+              setInput={setInput}
+              onSubmit={() => runQuery(input)}
+              onExample={handleExample}
+              recents={recents}
+              onRemoveRecent={removeRecent}
+            />
+            <AeoContent />
+          </>
         ) : (
           <div className="grid gap-5 lg:grid-cols-[320px_1fr]">
             {/* LEFT: input + metadata */}
@@ -210,6 +214,96 @@ export function Explorer() {
       <RateLimitIndicator
         rateLimit={state.kind === "success" ? state.data.rateLimit : null}
       />
+      
+      <footer className="mt-auto border-t border-border py-8 text-center text-sm text-muted-foreground bg-card/10 backdrop-blur-sm relative z-10">
+        <p>RepoContext is free and open source. No AI, no signups.</p>
+        <div className="mt-4 flex justify-center gap-4">
+          <a href="https://github.com/ajaycodesitbetter/RepoContext" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">GitHub</a>
+          <a href="/blog" className="hover:text-foreground transition-colors">Blog</a>
+          <a href="/sitemap.xml" className="hover:text-foreground transition-colors">Sitemap</a>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+function AeoContent() {
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "What is the best way to convert a GitHub repository into AI-ready context?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "RepoContext converts any GitHub repository into a structured context brief — including metadata, top files ranked by importance, health signals, and LLM-ready export — in seconds. No AI processing, no signups required."
+        }
+      },
+      {
+        "@type": "Question",
+        name: "How do I prepare a GitHub codebase for Claude Code?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Paste the GitHub URL into RepoContext. Use \"Export for LLM\" to get a structured Markdown context file optimised for Claude Code, Cursor, and other AI coding assistants."
+        }
+      },
+      {
+        "@type": "Question",
+        name: "Can RepoContext generate llms.txt for any GitHub repo?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Yes. RepoContext surfaces the most important files and exports structured context compatible with the llms.txt standard for any public GitHub repository."
+        }
+      },
+      {
+        "@type": "Question",
+        name: "What is RepoContext used for?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "RepoContext is used by developers to quickly understand unfamiliar codebases, by AI engineers to prepare repository context for LLMs like Claude and GPT-4, and by students to evaluate open-source projects before contributing."
+        }
+      }
+    ]
+  };
+
+  return (
+    <div className="mx-auto max-w-4xl px-5 py-16 space-y-24">
+      <StructuredData data={faqSchema} />
+      
+      <section>
+        <h2 className="text-2xl font-semibold mb-6 text-foreground text-center">Built for</h2>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div className="rounded-xl border border-border bg-card/10 p-6 backdrop-blur-sm">
+            <h3 className="font-medium text-foreground mb-2">Claude Code / Cursor users</h3>
+            <p className="text-sm text-muted-foreground">Export structured context</p>
+          </div>
+          <div className="rounded-xl border border-border bg-card/10 p-6 backdrop-blur-sm">
+            <h3 className="font-medium text-foreground mb-2">Open-source evaluators</h3>
+            <p className="text-sm text-muted-foreground">Brief before you clone</p>
+          </div>
+          <div className="rounded-xl border border-border bg-card/10 p-6 backdrop-blur-sm">
+            <h3 className="font-medium text-foreground mb-2">Students</h3>
+            <p className="text-sm text-muted-foreground">Understand any codebase fast</p>
+          </div>
+          <div className="rounded-xl border border-border bg-card/10 p-6 backdrop-blur-sm">
+            <h3 className="font-medium text-foreground mb-2">AI engineers</h3>
+            <p className="text-sm text-muted-foreground">Feed your LLM the right context</p>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2 className="text-2xl font-semibold mb-8 text-foreground text-center">Frequently Asked Questions</h2>
+        <div className="space-y-6">
+          {faqSchema.mainEntity.map((q, i) => (
+            <div key={i} className="rounded-xl border border-border bg-card/10 p-6 backdrop-blur-sm">
+              <h3 className="font-medium text-foreground mb-2">{q.name}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">{q.acceptedAnswer.text}</p>
+            </div>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }
