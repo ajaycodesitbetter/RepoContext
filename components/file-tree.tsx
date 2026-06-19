@@ -339,7 +339,7 @@ export function DownloadToolbar({
   if (selectedCount === 0) return null;
 
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-primary/20 bg-primary/5 px-4 py-2.5">
+    <div className="fixed bottom-4 left-1/2 z-50 flex w-[calc(100%-2rem)] max-w-md -translate-x-1/2 items-center gap-3 rounded-lg border border-primary/30 bg-background/95 p-3 shadow-2xl backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:w-auto">
       <span className="font-mono text-xs text-foreground">
         <span className="font-semibold tabular-nums">{selectedCount}</span> file
         {selectedCount !== 1 ? "s" : ""} selected

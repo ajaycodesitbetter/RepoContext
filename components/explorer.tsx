@@ -124,7 +124,7 @@ export function Explorer() {
       />
 
       {/* Slim brand header */}
-      <header className="border-b border-border bg-card/10 backdrop-blur-sm">
+      <header className="relative z-50 border-b border-border bg-card/10 backdrop-blur-sm">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3">
           <div className="flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary">
@@ -275,7 +275,7 @@ function Hero({
         <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-white/40">
           Try one
         </p>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-4">
           {EXAMPLES.map((ex) => (
             <button
               key={ex.label}

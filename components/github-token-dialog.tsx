@@ -51,7 +51,9 @@ export function GithubTokenDialog({ onTokenChange }: { onTokenChange?: () => voi
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-72 rounded-lg border border-border bg-card p-4 shadow-xl">
+        <>
+          <div className="fixed inset-0 z-[9998]" onClick={() => setIsOpen(false)} />
+          <div className="absolute right-0 top-full z-[9999] mt-2 w-72 rounded-lg border border-border bg-card p-4 shadow-xl">
           <div className="mb-3 flex items-center justify-between">
             <h3 className="font-serif text-sm font-medium text-foreground">GitHub Access</h3>
             <button
@@ -122,6 +124,7 @@ export function GithubTokenDialog({ onTokenChange }: { onTokenChange?: () => voi
             </form>
           )}
         </div>
+        </>
       )}
     </div>
   );

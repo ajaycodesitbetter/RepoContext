@@ -143,7 +143,7 @@ export function FilePreviewDialog({
       aria-label="File preview"
       onClick={handleBackdropClick}
       className={cn(
-        "fixed inset-0 z-50 m-0 h-full w-full max-h-full max-w-full",
+        "fixed inset-0 z-[9999] m-0 h-full w-full max-h-full max-w-full",
         "bg-transparent p-0",
         "backdrop:bg-black/70 backdrop:backdrop-blur-sm",
         // Override default dialog centering — we want a side panel
