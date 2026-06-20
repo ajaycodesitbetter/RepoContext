@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://repocontext.ajaymathuriya.com"),
   title: "RepoContext — Read Any GitHub Repo in Seconds",
   description:
-    "Convert any GitHub repository into an AI-ready context brief. Surface top files, health signals, and structured context for Claude Code, Cursor, and Gemini CLI. No AI, no signups.",
+    "Convert any GitHub repository into a structured context brief. Surface top files, health signals, and Markdown exports for Claude Code, Cursor, and Gemini CLI. No AI, no signups.",
   keywords: [
     "github repo to ai context",
     "repo to markdown for ai",
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "RepoContext — Read Any GitHub Repo in Seconds",
     description:
-      "Convert any GitHub repository into an AI-ready context brief. Surface top files, health signals, and structured context for Claude Code, Cursor, and Gemini CLI. No AI, no signups.",
+      "Convert any GitHub repository into a structured context brief. Surface top files, health signals, and Markdown exports for Claude Code, Cursor, and Gemini CLI. No AI, no signups.",
     url: "https://repocontext.ajaymathuriya.com",
     siteName: "RepoContext",
     type: "website",
@@ -50,7 +50,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "RepoContext — Read Any GitHub Repo in Seconds",
     description:
-      "Convert any GitHub repository into an AI-ready context brief. Surface top files, health signals, and structured context for Claude Code, Cursor, and Gemini CLI. No AI, no signups.",
+      "Convert any GitHub repository into a structured context brief. Surface top files, health signals, and Markdown exports for Claude Code, Cursor, and Gemini CLI. No AI, no signups.",
   },
   robots: {
     index: true,
@@ -81,7 +81,7 @@ export default function RootLayout({
     operatingSystem: "Web",
     url: "https://repocontext.ajaymathuriya.com",
     description:
-      "Convert any GitHub repository into structured AI-ready context brief. Surface top files, health signals, and structured context for Claude Code, Cursor, and Gemini CLI. No AI, no signups.",
+      "Convert any GitHub repository into a structured context brief. Surface top files, health signals, and Markdown exports for Claude Code, Cursor, and Gemini CLI. No AI, no signups.",
     offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
     author: {
       "@type": "Person",

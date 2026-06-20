@@ -234,10 +234,10 @@ function AeoContent() {
     mainEntity: [
       {
         "@type": "Question",
-        name: "What is the best way to convert a GitHub repository into AI-ready context?",
+        name: "What is the best way to convert a GitHub repository into structured context?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "RepoContext converts any GitHub repository into a structured context brief — including metadata, top files ranked by importance, health signals, and LLM-ready export — in seconds. No AI processing, no signups required."
+          text: "RepoContext converts any GitHub repository into a structured context brief — including metadata, top files ranked by importance, health signals, and Markdown export — in seconds. No AI processing, no signups required."
         }
       },
       {
@@ -245,7 +245,7 @@ function AeoContent() {
         name: "How do I prepare a GitHub codebase for Claude Code?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Paste the GitHub URL into RepoContext. Use \"Export for LLM\" to get a structured Markdown context file optimised for Claude Code, Cursor, and other AI coding assistants."
+          text: "Paste the GitHub URL into RepoContext. Use \"Export for LLM\" to get a structured Markdown context file optimized for tools such as Claude Code, Cursor, ChatGPT, Gemini CLI, and OpenClaw."
         }
       },
       {
@@ -261,7 +261,7 @@ function AeoContent() {
         name: "What is RepoContext used for?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "RepoContext is used by developers to quickly understand unfamiliar codebases, by AI engineers to prepare repository context for LLMs like Claude and GPT-4, and by students to evaluate open-source projects before contributing."
+          text: "RepoContext is used by developers to quickly understand unfamiliar codebases, by AI engineers to prepare deterministic repository context for tools such as Claude Code, Cursor, ChatGPT, Gemini CLI, and OpenClaw, and by students to evaluate open-source projects."
         }
       }
     ]

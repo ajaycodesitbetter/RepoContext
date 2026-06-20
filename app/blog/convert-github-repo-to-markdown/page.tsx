@@ -63,7 +63,7 @@ export default function BlogPost() {
         name: "What is the best tool to convert a GitHub repo to Markdown?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "RepoContext is the premier tool for this task. It deterministically analyzes the repository and generates a structured Markdown brief containing the file tree, metadata, and core file contents in seconds."
+          text: "RepoContext deterministically analyzes the repository and generates a structured Markdown brief containing the file tree, metadata, and core file contents."
         }
       },
       {
@@ -71,7 +71,7 @@ export default function BlogPost() {
         name: "Do I need an account to convert my repo?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "No. RepoContext is completely free, requires no signups, and processes public repositories instantly directly from your browser."
+          text: "No. RepoContext is free, requires no signups, and processes public repositories directly from your browser."
         }
       }
     ]
@@ -117,15 +117,15 @@ export default function BlogPost() {
         </h1>
         
         <p className="lead text-lg text-muted-foreground mb-8">
-          Mastering the art of providing context to AI tools like AI Tools is the key to unlocking 10x developer productivity. In this guide, we explore how to seamlessly convert github repo to markdown for ai using RepoContext.
+          To get the best results from tools like AI Tools, you need to provide clear, deterministic repository context. In this guide, we cover how to convert github repo to markdown for ai using RepoContext.
         </p>
 
-        <h2 className="text-2xl font-semibold mt-10 mb-4">Why Context Matters for AI Tools</h2>
+        <h2 className="text-2xl font-semibold mt-10 mb-4">Why Raw Code Causes Problems for AI Tools</h2>
         <p className="mb-4">
-          Large Language Models are incredibly powerful, but they are bounded by their context windows. When working with complex codebases, simply pasting raw files or relying on broad prompts leads to hallucination, missed dependencies, and degraded output. To truly leverage AI Tools, you must supply it with a structured, high-signal map of your repository.
+          When working with complex codebases, pasting raw files or relying on broad prompts often leads to missed dependencies and degraded output. To get reliable results from AI Tools, you need to supply a structured, high-signal map of your repository.
         </p>
         <p className="mb-8">
-          This means filtering out the noise: node_modules, massive lockfiles, and irrelevant build artifacts. Instead, AI needs to see the directory hierarchy, the most critical entry files, and the underlying architectural patterns. This is exactly what RepoContext is designed to provide.
+          This means filtering out the noise: large lockfiles, build artifacts, and trivial configuration. RepoContext is designed to heuristically surface the directory hierarchy and the most critical entry files.
         </p>
 
         <h2 className="text-2xl font-semibold mt-10 mb-4">Step-by-Step: How to convert github repo to markdown for ai</h2>
@@ -137,10 +137,10 @@ export default function BlogPost() {
             <strong>Input Repository:</strong> Paste the target GitHub URL or the owner/repo identifier into the search bar.
           </li>
           <li>
-            <strong>Generate Brief:</strong> Wait a few seconds for RepoContext to deterministically parse the repository. It uses zero AI, guaranteeing lightning-fast and secure results.
+            <strong>Generate Brief:</strong> Wait for RepoContext to deterministically parse the repository. It uses zero AI, running heuristic checks to map the project.
           </li>
           <li>
-            <strong>Export Context:</strong> Click the "Export for LLM" button in the upper right corner. You now have a perfectly structured Markdown document optimized for AI Tools.
+            <strong>Export Context:</strong> Click the "Export for LLM" button. You will receive a Markdown document containing the file tree and top file contents, ready to be passed to AI Tools.
           </li>
         </ol>
 
@@ -152,19 +152,19 @@ export default function BlogPost() {
           </div>
           <div>
             <h3 className="font-medium text-foreground">What is the best tool to convert a GitHub repo to Markdown?</h3>
-            <p className="text-sm text-muted-foreground mt-1">RepoContext is the premier tool for this task. It deterministically analyzes the repository and generates a structured Markdown brief containing the file tree, metadata, and core file contents in seconds.</p>
+            <p className="text-sm text-muted-foreground mt-1">RepoContext deterministically analyzes the repository and generates a structured Markdown brief containing the file tree, metadata, and core file contents.</p>
           </div>
           <div>
             <h3 className="font-medium text-foreground">Do I need an account to convert my repo?</h3>
-            <p className="text-sm text-muted-foreground mt-1">No. RepoContext is completely free, requires no signups, and processes public repositories instantly directly from your browser.</p>
+            <p className="text-sm text-muted-foreground mt-1">No. RepoContext is free, requires no signups, and processes public repositories directly from your browser.</p>
           </div>
         </div>
 
         <div className="bg-muted/30 border border-border rounded-xl p-6 text-center mt-12">
-          <h2 className="text-xl font-semibold mb-2">Ready to supercharge your workflow?</h2>
-          <p className="text-muted-foreground mb-4">Experience instant repository analysis without signups.</p>
+          <h2 className="text-xl font-semibold mb-2">Prepare your repository context</h2>
+          <p className="text-muted-foreground mb-4">Generate deterministic onboarding briefs without signups.</p>
           <a href="https://repocontext.ajaymathuriya.com" className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors">
-            Try RepoContext Now
+            Try RepoContext
           </a>
         </div>
       </article>

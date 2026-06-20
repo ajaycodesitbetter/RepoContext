@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "RepoContext",
     short_name: "RepoContext",
     description:
-      "Convert any GitHub repository into an AI-ready context brief. Surface top files, health signals, and structured context for Claude Code, Cursor, and Gemini CLI. No AI, no signups.",
+      "Convert any GitHub repository into a structured context brief. Surface top files, health signals, and Markdown exports for Claude Code, Cursor, and Gemini CLI. No AI, no signups.",
     start_url: "/",
     display: "standalone",
     background_color: "#000000",
