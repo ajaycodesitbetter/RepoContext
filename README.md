@@ -1,115 +1,80 @@
-# RepoContext
+<div align="center">
+  <h1>RepoContext</h1>
+  <p><strong>Read any GitHub repo, in seconds</strong></p>
+  
+  [![Website](https://img.shields.io/badge/Website-repocontext.ajaymathuriya.com-blue?style=for-the-badge)](https://repocontext.ajaymathuriya.com)
+  <br />
 
-> Read any GitHub repo, in seconds
-
-[![Live Website](https://img.shields.io/badge/Live-repocontext.ajaymathuriya.com-blue?style=for-the-badge)](https://repocontext.ajaymathuriya.com)
-[![Next.js](https://img.shields.io/badge/Next.js_14-black?style=for-the-badge&logo=next.js&logoColor=white)](#)
-[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](#)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_v4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](#)
-[![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)](#)
+  ![Next.js](https://img.shields.io/badge/next.js-000000?style=flat-square&logo=nextdotjs&logoColor=white)
+  ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=flat-square&logo=typescript&logoColor=white)
+  ![Tailwind CSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=flat-square&logo=tailwind-css&logoColor=white)
+  ![Vercel](https://img.shields.io/badge/vercel-%23000000.svg?style=flat-square&logo=vercel&logoColor=white)
+</div>
 
 ## What is RepoContext?
-
-RepoContext is a blazing-fast, fully deterministic web application designed to instantly parse and present the structure, health, and context of any GitHub repository. It requires no signups and uses absolutely no AI, giving developers an instant, objective heuristic-based onboarding brief for any codebase.
+RepoContext converts any public or private GitHub repository into a structured brief. It uses deterministic, heuristic-based analysis to surface the file tree and rank the files most worth reading first. No AI processing, no signups, no agents.
 
 ## Features
-
-- **Public Repo Brief** — Paste any GitHub URL or owner/repo, get an instant structured brief: project type, metadata, health signals, dependency risk, open issues/PRs.
-- **Onboarding Brief** — Start reading order, top files most worth reading first, heuristic-based (no AI).
-- **Full File Tree** — Browse the complete repo tree with directory expansion and support for 28k+ entries.
-- **File Preview** — Inline 16KB preview of any file. Press `ESC` or click ✕ to close. Truncated files show a "Showing first 16KB" notice.
-- **Single File Download** — Download any file directly in its original format with one click, no ZIP required.
-- **Bulk File Download** — Checkbox multi-select on file rows with a "Download Selected (N)" floating toolbar that downloads all selected files as a single ZIP archive.
-- **Copy as Markdown** — Copy the entire repo brief as a Markdown document.
-- **Export for LLM** — Export structured context explicitly optimized for LLMs like Claude, Cursor, ChatGPT, Gemini CLI, and OpenClaw.
-- **Quick Download** — One-click brief download.
-- **Private Repo Access** — Native support for private repositories using a GitHub Personal Access Token (PAT).
-- **Repository Health Layer** — Insights into activity status, review pressure, community breadth, and open issues/PRs preview.
-- **GitHub API Counter** — Live remaining rate limit display to manage API requests.
+1. **Public Repo Brief** — Paste any GitHub URL or owner/repo to get a structured brief including project type, metadata, health signals, dependency risk, and open issues/PRs.
+2. **Onboarding Brief** — Get a recommended starting reading order with top files ranked by importance via heuristic-based analysis (no AI).
+3. **Full File Tree** — Browse the complete repository tree with directory expansion, supporting up to 28k+ entries.
+4. **File Preview** — Inline 16KB preview of any file. Press ESC or click ✕ to close.
+5. **Single File Download** — Download any file in its original format with one click, without needing a ZIP.
+6. **Bulk File Download** — Checkbox multi-select on file rows, featuring a floating "Download Selected (N)" toolbar and ZIP archive generation.
+7. **Copy as Markdown** — Copy the entire repository brief to your clipboard as a single Markdown document.
+8. **Export for LLM** — Generate and export structured context specifically formatted for tools like Claude Code, Cursor, ChatGPT, Gemini CLI, and OpenClaw.
+9. **Quick Download** — One-click download of the complete brief.
+10. **Private Repo Access** — Support for private repositories via Personal Access Token (PAT).
+11. **Repository Health Layer** — Insights into activity status, review pressure, community breadth, and open issues/PRs previews.
+12. **GitHub API Counter** — Live display of your remaining GitHub rate limit.
 
 ## Use Cases
-
-- **Developers** evaluating open-source projects before integrating or contributing.
-- **Engineers** preparing comprehensive codebase context to feed into LLMs.
-- **Students** exploring unfamiliar repositories and learning repository structures.
-- **Teams** rapidly onboarding new members to existing codebases.
+- **Developers** evaluating open-source projects before deciding to use or contribute to them.
+- **Engineers** preparing codebase context for LLMs (Claude Code, Cursor, ChatGPT, Gemini CLI, OpenClaw).
+- **Students** exploring and understanding unfamiliar codebases.
+- **Teams** onboarding new members to existing code repositories.
 
 ## Getting Started
 
 ### Prerequisites
-- **Node.js**: v18+
-- **Package Manager**: pnpm
-- **GitHub PAT**: A Personal Access Token for GitHub API access.
+- Node.js 18+
+- pnpm
+- GitHub PAT (Optional, for private repos and higher rate limits)
 
 ### Installation
+Clone the repository and install dependencies:
+```bash
+git clone https://github.com/ajaycodesitbetter/RepoContext.git
+cd RepoContext
+pnpm install
+```
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/ajaycodesitbetter/RepoContext.git
-   cd RepoContext
-   ```
+### Environment Setup
+Create a `.env.local` file in the root directory:
+```bash
+cp .env.example .env.local
+```
+Add your GitHub Personal Access Token (PAT) for expanded API limits:
+```env
+GITHUB_TOKEN=your_personal_access_token_here
+```
 
-2. **Install dependencies:**
-   ```bash
-   pnpm install
-   ```
-
-3. **Environment Setup:**
-   Create a `.env.local` file in the root directory and add your GitHub token:
-   ```env
-   GITHUB_TOKEN=your_personal_access_token_here
-   ```
-
-4. **Start the Development Server:**
-   ```bash
-   pnpm dev
-   ```
-   Open `http://localhost:3000` with your browser to see the result.
-
-## API Reference
-
-RepoContext provides internal API routes used by the frontend to fetch repository data.
-
-### `GET /api/brief`
-Generates a structured brief for a given repository.
-
-- **Parameters:**
-  - `owner` (string): Repository owner.
-  - `repo` (string): Repository name.
-- **Response:** JSON object containing metadata, health signals, dependencies, and file tree.
-- **Example cURL:**
-  ```bash
-  curl "http://localhost:3000/api/brief?owner=ajaycodesitbetter&repo=RepoContext"
-  ```
-
-### `GET /api/file`
-Fetches file contents or triggers a direct download.
-
-- **Parameters:**
-  - `owner` (string): Repository owner.
-  - `repo` (string): Repository name.
-  - `path` (string): File path in the repository.
-  - `branch` (string): Target branch.
-  - `download` (boolean, optional): If `true`, sets `Content-Disposition` to `attachment`.
-- **Response:** JSON object containing base64 encoded content (for previews) or raw file bytes (for downloads).
-- **Example cURL:**
-  ```bash
-  curl "http://localhost:3000/api/file?owner=ajaycodesitbetter&repo=RepoContext&path=package.json&branch=main"
-  ```
+### Running the Development Server
+```bash
+pnpm dev
+```
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Tech Stack
-
-| Category         | Technology                 |
-|------------------|----------------------------|
-| **Framework**    | Next.js 14 (App Router)    |
-| **Language**     | TypeScript                 |
-| **Styling**      | Tailwind CSS v4            |
-| **Hosting**      | Vercel                     |
+| Category | Technology |
+|---|---|
+| **Framework** | Next.js 14 (App Router) |
+| **Language** | TypeScript |
+| **Styling** | Tailwind CSS v4 |
+| **Hosting** | Vercel |
 
 ## Contributing
-
-Contributions are welcome! Please open an issue or submit a pull request for any improvements or bug fixes. Ensure that your code passes all linting and typing checks before submitting.
+We welcome contributions! Please open an issue on the [GitHub repository](https://github.com/ajaycodesitbetter/RepoContext/issues) to discuss proposed changes before submitting a pull request.
 
 ## License
-
-This project is licensed under the MIT License.
+Please refer to the LICENSE file in this repository if provided.
