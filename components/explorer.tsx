@@ -350,8 +350,7 @@ function Hero({
         <code className="rounded bg-white/10 px-1.5 py-0.5 font-mono text-[13px] text-white/90">
           owner/repo
         </code>
-        . We surface the file tree and the files most worth reading first — no
-        signups, no agents.
+        . Browse the file tree, preview files inline, download what you need, and export structured context for Claude Code, Cursor, or ChatGPT — no signups, no agents.
       </p>
 
       {/* Input */}
