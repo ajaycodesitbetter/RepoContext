@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Instrument_Serif, JetBrains_Mono } from "next/font/google";
 import { StructuredData } from "@/components/structured-data";
+import { RightClickPreventer } from "@/components/right-click-preventer";
 import "./globals.css";
 
 const inter = Inter({
@@ -98,6 +99,7 @@ export default function RootLayout({
     >
       <body className="min-h-screen bg-background font-sans text-foreground antialiased">
         <StructuredData data={schema} />
+        <RightClickPreventer />
         {children}
       </body>
     </html>
