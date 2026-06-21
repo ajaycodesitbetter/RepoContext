@@ -606,9 +606,15 @@ function SuccessMain({ data }: { data: BriefResponse }) {
     setDownloadError(null);
 
     try {
+      const { getStoredGithubToken } = await import("@/lib/github-token");
+      const token = getStoredGithubToken();
+
       const res = await fetch("/api/download", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          ...(token ? { "x-github-token": token } : {})
+        },
         body: JSON.stringify({
           repo: repoSlug,
           paths: [...selectedPaths],

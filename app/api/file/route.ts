@@ -12,8 +12,8 @@ export const runtime = "nodejs";
 
 const MAX_PREVIEW_BYTES = 16 * 1024; // 16 KB
 
-function authHeaders(): Record<string, string> {
-  const token = process.env.GITHUB_TOKEN;
+function authHeaders(reqToken: string | null): Record<string, string> {
+  const token = reqToken || process.env.GITHUB_TOKEN;
   const headers: Record<string, string> = {
     "User-Agent": "RepoContext/0.1 (+https://repocontext.local)",
   };
@@ -49,10 +49,11 @@ export async function GET(
   try {
     // Use the GitHub Contents API (not raw.githubusercontent) so we can get
     // the true file size from the response metadata before decoding.
+    const reqToken = request.headers.get("x-github-token");
     const apiUrl = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/contents/${path}?ref=${encodeURIComponent(ref)}`;
     const res = await fetch(apiUrl, {
       headers: {
-        ...authHeaders(),
+        ...authHeaders(reqToken),
         Accept: "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28",
       },
@@ -87,7 +88,7 @@ export async function GET(
     if (data.content) {
       rawBuffer = Buffer.from(data.content, "base64");
     } else if (data.download_url) {
-      const rawRes = await fetch(data.download_url, { headers: authHeaders() });
+      const rawRes = await fetch(data.download_url, { headers: authHeaders(reqToken) });
       if (!rawRes.ok) throw new Error("Failed to fetch large file content");
       rawBuffer = Buffer.from(await rawRes.arrayBuffer());
     } else {

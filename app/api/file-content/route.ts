@@ -10,8 +10,8 @@ export const runtime = "nodejs";
 
 const MAX_SIZE = 100 * 1024; // 100KB
 
-function authHeaders(): Record<string, string> {
-  const token = process.env.GITHUB_TOKEN;
+function authHeaders(reqToken: string | null): Record<string, string> {
+  const token = reqToken || process.env.GITHUB_TOKEN;
   const headers: Record<string, string> = {
     "User-Agent": "RepoContext/0.1 (+https://repocontext.local)",
   };
@@ -36,9 +36,10 @@ export async function GET(request: Request): Promise<NextResponse> {
   }
 
   try {
+    const reqToken = request.headers.get("x-github-token");
     const rawUrl = `https://raw.githubusercontent.com/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/${encodeURIComponent(branch)}/${path}`;
     const res = await fetch(rawUrl, {
-      headers: authHeaders(),
+      headers: authHeaders(reqToken),
       next: { revalidate: 300 },
     });
 

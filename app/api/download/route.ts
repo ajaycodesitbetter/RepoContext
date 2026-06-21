@@ -13,8 +13,8 @@ export const runtime = "nodejs";
 
 const MAX_FILES = 50;
 
-function authHeaders(): Record<string, string> {
-  const token = process.env.GITHUB_TOKEN;
+function authHeaders(reqToken: string | null): Record<string, string> {
+  const token = reqToken || process.env.GITHUB_TOKEN;
   const headers: Record<string, string> = {
     "User-Agent": "RepoContext/0.1 (+https://repocontext.local)",
   };
@@ -78,8 +78,9 @@ export async function POST(request: Request): Promise<NextResponse> {
     );
   }
 
+  const reqToken = request.headers.get("x-github-token");
   const zip = new JSZip();
-  const headers = authHeaders();
+  const headers = authHeaders(reqToken);
 
   const results = await Promise.allSettled(
     validPaths.map(async (filePath) => {

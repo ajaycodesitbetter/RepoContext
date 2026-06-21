@@ -47,7 +47,11 @@ export function useFilePreview(repo: string, ref: string) {
 
       try {
         const params = new URLSearchParams({ repo, path, ref });
-        const res = await fetch(`/api/file?${params.toString()}`);
+        const { getStoredGithubToken } = await import("@/lib/github-token");
+        const token = getStoredGithubToken();
+        const res = await fetch(`/api/file?${params.toString()}`, {
+          headers: token ? { "x-github-token": token } : undefined
+        });
 
         if (!res.ok) {
           const err = (await res.json().catch(() => null)) as {

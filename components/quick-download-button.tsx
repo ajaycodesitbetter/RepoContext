@@ -62,8 +62,11 @@ export function QuickDownloadButton({
       if (isBinaryFile(file.path)) continue;
 
       try {
+        const { getStoredGithubToken } = await import("@/lib/github-token");
+        const token = getStoredGithubToken();
         const res = await fetch(
           `/api/file-content?owner=${encodeURIComponent(meta.owner)}&repo=${encodeURIComponent(meta.repo)}&branch=${encodeURIComponent(branch)}&path=${encodeURIComponent(file.path)}`,
+          { headers: token ? { "x-github-token": token } : undefined }
         );
 
         if (!res.ok) continue;

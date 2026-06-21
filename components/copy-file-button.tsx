@@ -71,8 +71,11 @@ export function CopyFileButton({
 
     setStatus("loading");
     try {
+      const { getStoredGithubToken } = await import("@/lib/github-token");
+      const token = getStoredGithubToken();
       const res = await fetch(
         `/api/file-content?owner=${encodeURIComponent(owner)}&repo=${encodeURIComponent(repo)}&branch=${encodeURIComponent(branch)}&path=${encodeURIComponent(filePath)}`,
+        { headers: token ? { "x-github-token": token } : undefined }
       );
 
       if (!res.ok) {
